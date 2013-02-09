@@ -1057,8 +1057,8 @@ k_x() {
     trf)
         cf "setxkbmap -model evdev -layout tr -variant f"
     ;;
-    *)
-        cf "setxkbmap -model evdev -layout ${keymap}"
+    us)
+        cf "setxkbmap -model evdev -layout us"
     ;;
     esac
 
@@ -1147,7 +1147,14 @@ k_x() {
     cf '    MatchIsKeyboard "on"'
     cf '    MatchDevicePath "/dev/input/event*"'
     cf '    Driver "evdev"'
-    cf '    Option "XkbLayout" "tr"'
+        case ${keymap} in
+        trq|trf)
+            cf '    Option "XkbLayout" "tr"'
+        ;;
+        us)
+            cf '    Option "XkbLayout" "us"'
+        ;;
+        esac
         case ${keymap} in
         trf)
             cf '    Option "XkbVariant" "f"'
@@ -1682,19 +1689,28 @@ prepare() {
             value="0"
         ;;
         keymap)
-            value="trq"
+            value="us"
         ;;
-        domainname|username)
+        domainname)
             value="easygentoo"
         ;;
-        hostname|rootpass|userpass)
-            value="gentoo"
+        username)
+            value="owner"
+        ;;
+        hostname)
+            value="freshinstall"
+        ;;
+        rootpass)
+            value="toor"
+        ;;
+        userpass)
+            value="resu"
         ;;
         root)
-            echo; er "  /root partition is not specified in profile. Change your profile and start again please."; echo; exit 1
+            echo; er "  /root partition is not specified in profile. Please change your profile and start again."; echo; exit 1
         ;;
         setup)
-            value="normal"
+            value="basic"
         ;;
         grub)
             value="$(echo ${root_part} | sed s:[0-9].*::)"
@@ -1825,6 +1841,20 @@ prepare() {
             case ${s} in
             emerge)
                 e="x"
+            ;;
+            keymap)
+                value="$(awk '{print $2}' p.tmp)"
+                case ${value} in
+                trq|trf|us)
+                    e="x"
+                ;;
+                tr)
+                    value="trq"
+                ;;
+                *)
+                    value="us"
+                ;;
+                esac
             ;;
             *)
                 value="$(awk '{print $2}' p.tmp)"
@@ -2124,6 +2154,14 @@ inside() {
     cf 'ACCEPT_KEYWORDS="'${kw}'"'
     cf 'ACCEPT_LICENSE="*"'
     cf 'MAKEOPTS="-j2"'
+        case ${keymap} in
+        trq|trf)
+            cf 'LINGUAS="tr en"'
+        ;;
+        us)
+            cf 'LINGUAS="en"'
+        ;;
+        esac
     cf 'AUTOCLEAN="no"'
     cf 'FEATURES="-ccache -distcc fixlafiles -news -parallel-fetch sandbox userpriv usersandbox"'
     cf 'USE="'${available_cpu_flags}'"'
@@ -2702,7 +2740,14 @@ inside() {
     echo 'LANG="tr_TR.UTF-8"' > /etc/env.d/02locale
     echo 'LC_MESSAGES="tr_TR.UTF-8"' >> /etc/env.d/02locale
     
-    [[ -e "/etc/conf.d/consolefont" ]] && sed -i s:".*consolefont=.*":"consolefont=\"iso09.16\"": /etc/conf.d/consolefont || echo 'consolefont="iso09.16"' >> /etc/conf.d/consolefont
+    case ${keymap} in
+    trq|trf)
+        [[ -e "/etc/conf.d/consolefont" ]] && sed -i 's:.*consolefont=.*:consolefont="iso09.16":' /etc/conf.d/consolefont || echo 'consolefont="iso09.16"' >> /etc/conf.d/consolefont
+    ;;
+    us)
+        [[ -e "/etc/conf.d/consolefont" ]] && sed -i 's:.*consolefont=.*:consolefont="default8x16":' /etc/conf.d/consolefont || echo 'consolefont="default8x16"' >> /etc/conf.d/consolefont
+    ;;
+    esac
     
     rc-update add consolefont boot &>/dev/null
 
@@ -2786,10 +2831,16 @@ end() {
     cf "SHOWFREEDSPACE"
     cf "VERBOSE"
     cf ""
-    cf "tr"
-    cf "tr_TR"
-    cf "tr_TR.UTF-8"
-    cf "tr_TR ISO-8859-9"
+    
+    case ${keymap} in
+    trq|trf)
+        cf "tr"
+        cf "tr_TR"
+        cf "tr_TR.UTF-8"
+        cf "tr_TR ISO-8859-9"
+    ;;
+    esac
+    
     cf "en"
     cf "en_US"
     cf "en_US.UTF-8"
@@ -2840,15 +2891,7 @@ report() {
     echo "Administrator (root) password: ${rootpass}" >> ${rp}
     echo "Domainname: ${domainname}" >> ${rp}
     echo "Hostname: ${hostname}" >> ${rp}
-    
-    case ${keymap} in
-    trq)
-        echo "Keymap: Turkish-Q" >> ${rp}
-    ;;
-    trf)
-        echo "Keymap: Turkish-F" >> ${rp}
-    ;;
-    esac
+    echo "Keymap: ${keymap}" >> ${rp}
 
     if [ -n "${adapters_found}" ]; then
         echo "Network adapters: ${adapters_found}" >> ${rp}
