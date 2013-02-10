@@ -4,6 +4,8 @@
 #         Easy Gentoo           #
 # ----------------------------- #
 #                               #
+# another Gentoo install script #
+#              by               #
 #        Şehidcan Erdim         #
 # sehidcan (at) gmail (dot) com #
 #################################
@@ -847,7 +849,7 @@ k_must() {
 
 k_needed() {
     asama=$(echo; eb2 "* "; eg "Installing basic tools..."; echo; sleep 0.5s)
-    inst "acpid bash-completion consolekit dbus hotplug localepurge ntp sudo"
+    inst "acpid bash-completion consolekit dbus localepurge ntp sudo"
     
     eselect bashcomp enable --global gentoo
 
@@ -875,7 +877,6 @@ k_needed() {
     rc-update add acpid default &>/dev/null
     rc-update add consolekit default &>/dev/null
     rc-update add dbus default &>/dev/null
-    rc-update add hotplug boot &>/dev/null
     rc-update add udev sysinit &>/dev/null
     rc-update add udev-mount default &>/dev/null
     rc-update add udev-postmount default &>/dev/null
@@ -1077,28 +1078,8 @@ k_x() {
     cf 'gtk-font-name = "DejaVu Sans 9"'
     cf 'gtk-theme-name = "MurrinaBlu"'
     
-    case ${setup} in
-    basic)
-        fl "/home/${username}/.bashrc" "0" "0"
-        cf 'if [[ -z "$DISPLAY" ]] && [[ $(tty) = /dev/tty1 ]]; then'
-        cf '    startx'
-        cf '    logout'
-        cf 'fi'
-    ;;
-    normal)
-        asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Gdm"; eg " login manager..."; echo)
-        k_gdm
-        
-        rc-update add xdm default &>/dev/null
-
-        fl "/etc/conf.d/xdm" "0" "0"
-        
-        sed -i s:"^DISPLAYMANAGER=.*":"DISPLAYMANAGER=\"gdm\"": ${trg_file}
-        cf "NEEDS_HALD=\"no\""
-        
-        chown -fP ${username} ${trg_file}
-    ;;
-    esac
+    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Gdm"; eg " login manager..."; echo)
+    k_gdm
     
     active=$(eselect opengl list | grep "xorg-x11" | grep "*")
 
@@ -1107,7 +1088,6 @@ k_x() {
     fi
 
     hwsetup
-    # mkxf86config.sh 2> /dev/null >> info.eg
     usermod -a -G plugdev pulse &>/dev/null
     refresh
     
@@ -1352,7 +1332,7 @@ k_xfce() {
     if [ "${type}" == "pc" ]; then
         inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     else
-        inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager xfce4-battery-plugin xfce4-power-manager"
+        inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     fi
     
     asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Thunar"; eg "... "; sleep 0.5s; echo)
@@ -1375,6 +1355,15 @@ k_xfce() {
     fi
     
     cp /etc/xdg/xfce4/panel/default.xml /home/${username}/.config/xfce4/panel/
+    
+    rc-update add xdm default &>/dev/null
+
+    fl "/etc/conf.d/xdm" "0" "0"
+    
+    sed -i s:"^DISPLAYMANAGER=.*":"DISPLAYMANAGER=\"gdm\"": ${trg_file}
+    cf "NEEDS_HALD=\"no\""
+    
+    chown -fP ${username} ${trg_file}
 }
 
 k_system() {
@@ -1433,8 +1422,7 @@ vlist() {
 
 start() {
     export SHELL=$(which bash); setterm -blank 0; cl
-    mirrorlist="ftp://ftp.linux.org.tr/gentoo http://ftp.linux.org.tr/gentoo ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
-
+    
     eg="easygentoo"; profile="profile"; vl="variables"; mnt="/mnt/gentoo"
     lt="latest-stage3.txt"; compiled="compiled.txt"
     
@@ -1534,7 +1522,7 @@ check() {
         if [ -n "${pr_need}" ]; then
             case ${g} in
             btrfs)
-                fsprogs="btrfs btrfs-progs"
+                fsprogs="btrfs-progs"
             ;;
             ext2|ext3|ext4)
                 fsprogs="e2fsprogs e2fsprogs-libs"
@@ -1861,6 +1849,16 @@ prepare() {
 get_tar() {
     [[ "$(ping -nc1 www.google.com)" ]] && tch connected.eg || { [[ "$(ping -nc3 www.google.com)" ]] && tch connected.eg || connect_me &>/dev/null; }
     echo; eb2 "* "; eg "Checking mirrors..."; sleep 0.5s
+    
+    case ${keymap} in
+    trq|trf)
+        mirrorlist="http://ftp.linux.org.tr/gentoo ftp://ftp.linux.org.tr/gentoo ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
+    ;;
+    us)
+        mirrorlist="ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://gentoo.supp.name http://portage.org.ua"
+    ;;
+    esac
+    
     mirror_check
     
     which ntpdate &>/dev/null && ntpdate -b -u pool.ntp.org &>/dev/null
@@ -2166,7 +2164,19 @@ inside() {
     esac
     
     fl "/etc/locale.gen" "0" "0"
-    cf "tr_TR.UTF-8 UTF-8"
+    
+    case ${keymap} in
+    trq|trf)
+        cf "en_US.UTF-8"
+        cf "en_US ISO-8859-1"
+        cf "tr_TR.UTF-8 UTF-8"
+    ;;
+    us)
+        cf "en_US.UTF-8"
+        cf "en_US ISO-8859-1"
+    ;;
+    esac
+    
     locale-gen &>/dev/null
     
     echo; eb2 "* "; eg2 "Updating"; er " make.conf..."; sleep 0.5s
@@ -2237,7 +2247,7 @@ inside() {
         cf '#X'
         cf 'USE="${USE} -cairo -dga -gif -gtk -opengl -svg -tiff -X -xinerama -xpm"'
         cf '#no desktop environment'
-        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4"'
+        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4 -startup-notification -thunar -xfce"'
     ;;
     esac
     
@@ -2251,7 +2261,14 @@ inside() {
     cf ''
     cf 'VIDEO_CARDS="vesa"'
     cf 'INPUT_DEVICES="evdev"'
-    cf 'LINGUAS="tr"'
+        case ${keymap} in
+        trq|trf)
+            cf 'LINGUAS="tr en"'
+        ;;
+        us)
+            cf 'LINGUAS="en"'
+        ;;
+        esac
     cf 'AUTOCLEAN="yes"'
     cf 'CONFIG_PROTECT="/etc /etc/fstab /etc/hosts /etc/locale.gen 
     /etc/localtime /etc/rc.conf /etc/sudoers /etc/sysctl.conf 
@@ -2496,7 +2513,7 @@ inside() {
         /etc/conf.d/domainname|/etc/localtime)
             fl "${d}" "0" "d"
         ;;
-        /etc/sysctl.conf|/etc/rc.conf)
+        /etc/sysctl.conf)
             fl "${d}" "b" "d"
         ;;
         *)
@@ -2512,7 +2529,18 @@ inside() {
             sed -i s:"^127.0.0.1.*":"127.0.0.1      ${hostname}.${domainname} ${hostname} gentoo": ${trg_file}
         ;;
         /etc/locale.gen)
-            cf 'tr_TR.UTF-8 UTF-8'
+            case ${keymap} in
+            trq|trf)
+                cf "en_US.UTF-8"
+                cf "en_US ISO-8859-1"
+                cf "tr_TR.UTF-8 UTF-8"
+            ;;
+            us)
+                cf "en_US.UTF-8"
+                cf "en_US ISO-8859-1"
+            ;;
+            esac
+            
             locale-gen &>/dev/null
         ;;
         /etc/localtime)
@@ -2520,31 +2548,9 @@ inside() {
             echo "Turkey" > /etc/timezone
         ;;
         /etc/rc.conf)
-            cf '#rc_parallel="NO"'
-            cf '#rc_interactive="NO"'
-            cf 'rc_shell=/sbin/sulogin'
-            cf '#rc_depend_strict="YES"'
             cf 'rc_hotplug="!net.*"'
             cf 'rc_logger="NO"'
-            cf '#rc_env_allow="VAR1 VAR2"'
-            cf '#rc_start_wait="100"'
-            cf '#rc_nostop=""'
-            cf '#rc_crashed_stop=NO'
-            cf '#rc_crashed_start=YES'
             cf 'unicode="YES"'
-            cf '#extra_net_fs_list=""'
-            cf '#export SSD_NICELEVEL="-19"'
-            cf '#rc_ulimit="-u 30"'
-            cf '#rc_config="/etc/foo"'
-            cf '#rc_need="openvpn"'
-            cf '#rc_use="net.eth0"'
-            cf '#rc_after="clock"'
-            cf '#rc_before="local"'
-            cf '#rc_provide="!net"'
-            cf '#rc_foo_config="/etc/foo"'
-            cf '#rc_foo_need="openvpn"'
-            cf '#rc_foo_after="clock"'
-            cf '#rc_net_tap0_provide="!net"'
             cf 'rc_sys=""'
             cf 'rc_tty_number=12'
             cf 'dbus_enable="YES"'
@@ -2558,14 +2564,11 @@ inside() {
             cf '## if not functioning as a router, there is no need to accept redirects or source routes'
             cf 'net.ipv4.conf.all.accept_redirects = 0'
             cf 'net.ipv4.conf.all.accept_source_route = 0'
-            cf 'net.ipv6.conf.all.accept_redirects = 0'
-            cf 'net.ipv6.conf.all.accept_source_route = 0'
             cf 'net.ipv4.conf.all.secure_redirects = 1'
             cf '## send redirects (not a router, disable it)'
             cf 'net.ipv4.conf.all.send_redirects = 0'
             cf '## Disable packet forwarding'
             cf 'net.ipv4.ip_forward = 0'
-            cf 'net.ipv6.conf.all.forwarding = 0'
             cf '## protect against tcp time-wait assassination hazards'
             cf '## drop RST packets for sockets in the time-wait state'
             cf '## (not widely supported outside of linux, but conforms to RFC)'
@@ -2677,12 +2680,20 @@ inside() {
     
     echo; emerge --config timezone-data
 
-    echo; eb2 "* "; eg2 "Configuring the system for "; er2 "Turkish"; eg " language..."; sleep 0.5s
+    echo; eb2 "* "; eg "Configuring locale settings..."; sleep 0.5s
     
     [[ -e "/etc/env.d/02locale" ]] && { cp /etc/env.d/02locale /etc/env.d/02locale.backup; rm -rf /etc/env.d/02locale; }
     
-    echo 'LANG="tr_TR.UTF-8"' > /etc/env.d/02locale
-    echo 'LC_MESSAGES="tr_TR.UTF-8"' >> /etc/env.d/02locale
+    case ${keymap} in
+    trq|trf)
+        echo 'LANG="tr_TR.UTF-8"' > /etc/env.d/02locale
+        echo 'LC_MESSAGES="tr_TR.UTF-8"' >> /etc/env.d/02locale
+    ;;
+    us)
+        echo 'LANG="en_US.UTF-8"' > /etc/env.d/02locale
+        echo 'LC_MESSAGES="en_US.UTF-8"' >> /etc/env.d/02locale
+    ;;
+    esac
     
     case ${keymap} in
     trq|trf)
@@ -2714,11 +2725,13 @@ inside() {
 
     echo "${username}:${userpass}" | chpasswd
     
-    echo "%users   ALL=(root) ALL" >> /etc/sudoers
-    echo "%users   ALL=(root) NOPASSWD: $(which shutdown)" >> /etc/sudoers
-    echo "%users   ALL=(root) NOPASSWD: $(which reboot)" >> /etc/sudoers
-    echo "%users   ALL=(root) NOPASSWD: $(which halt)" >> /etc/sudoers
-    echo "%users   ALL=(root) NOPASSWD: $(which emerge)" >> /etc/sudoers
+    if [ -e "/etc/sudoers" ]; then
+        echo "%users   ALL=(root) ALL" >> /etc/sudoers
+        echo "%users   ALL=(root) NOPASSWD: $(which shutdown)" >> /etc/sudoers
+        echo "%users   ALL=(root) NOPASSWD: $(which reboot)" >> /etc/sudoers
+        echo "%users   ALL=(root) NOPASSWD: $(which halt)" >> /etc/sudoers
+        echo "%users   ALL=(root) NOPASSWD: $(which emerge)" >> /etc/sudoers
+    fi
 
     lff
     
@@ -2730,6 +2743,7 @@ inside() {
 
     cp /etc/skel/.bashrc ${trg_file}
     
+    cf ""
     cf "export XDG_CONFIG_HOME=\"/home/${username}/.config\""
     cf "alias reboot='sudo shutdown -r now'"
     cf "alias halt='sudo halt -pi'"
@@ -2743,16 +2757,14 @@ inside() {
     cf "alias pm='sudo nano /etc/portage/package.mask'"
     cf "alias pk='sudo nano /etc/portage/package.keywords'"
 
-    # cf ""
-    # cf 'PS1="\n\[\e[31;1m\][\[\e[37;1m\]\u\[\e[31;1m\]][\[\e[37;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"'
-    # cf ""
+    cf ""
+    cf 'PS1="\n\[\e[31;1m\][\[\e[37;1m\]\u\[\e[31;1m\]][\[\e[37;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"'
+    cf ""
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
     inst "--unmerge dmidecode lafilefixer localepurge"
-    #mkxf86config
     echo "$(grep -v dmidecode ${compiled} | grep -v lafilefixer | grep -v  localepurge)" > ${compiled}
-    # | grep -v  mkxf86config
     k_check
     end
 }
@@ -2767,7 +2779,14 @@ end() {
     cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
     cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
     
-    echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg2 " and "; er2 "English"; eg "..."; sleep 1s; echo
+    case ${keymap} in
+    trq|trf)
+        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg2 " and "; er2 "English"; eg "..."; sleep 1s; echo
+    ;;
+    us)
+        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "English"; eg "..."; sleep 1s; echo
+    ;;
+    esac
 
     fl "/etc/locale.nopurge" "b" "d"
     
