@@ -1,4 +1,4 @@
-=========================================================================
+-------------------------------------------------------------------------
 YOU ARE FREE TO DISTRIBUTE, CHANGE, CUSTOMIZE OR PUBLISH THIS SCRIPT
 OR ANY PART OF IT.
 
@@ -14,7 +14,7 @@ AS A SIDE NOTE; I'M NOT A PROGRAMMER AND I CREATED THIS SCRIPT AS A HOBBY
 FOR MY OWN NEEDS. THERE MUST BE SOME MISTAKES OR PARTS THAT NEED
 IMPROVING. I RECOMMEND YOU TO USE IT IN A VIRTUAL ENVIRONMENT FIRST.
 DON'T FORGET TO CROSS FINGERS WHILE USING IT ON A REAL MACHINE :)
-=========================================================================
+-------------------------------------------------------------------------
 
 Easy Gentoo
 ===========
