@@ -19,7 +19,7 @@ eb2() { echo -n "${blue}${*}${normal}";} ; ep2() { echo -n "${pink}${*}${normal}
 cl() { clear; sleep 0.5s; echo;}
 
 exist() {
-    which ${1} &>/dev/null && { ey2 "  * "; eb2 "${1}"; en " exists"; sleep 0.2s; } || { er2 "  * "; eb2 "${1}"; er " doesn't exist"; er "Necessary tools doesn't exist - Please use a different install media/environment"; echo; exit 1; }
+    which ${1} &>/dev/null && { ey2 "  * "; eb2 "${1}"; en " exists"; sleep 0.2s; } || { er2 "  * "; eb2 "${1}"; er " doesn't exist"; er "Some tools are missing - Please use a different install media/environment"; echo; exit 1; }
 }
 
 find_flags() {
@@ -936,7 +936,7 @@ k_portage() {
     
     eselect profile set "${p_num}"
     
-    er "  emerge --sync (this may take a while)"
+    eb2 "* "; eg "emerge --sync (this may take a while)"
     inst "sync"
     inst "--nodeps portage"
 }
@@ -1440,11 +1440,11 @@ refresh() {
 }
 
 lff() {
-    which lafilefixer &>/dev/null && { echo; er "  lafilefixer --justfixit"; echo; lafilefixer --justfixit | grep -v "skipping"; }
+    which lafilefixer &>/dev/null && { echo; eb2 "* "; eg "lafilefixer --justfixit"; echo; lafilefixer --justfixit | grep -v "skipping"; }
 }
 
 rdr() {
-    which revdep-rebuild &>/dev/null && { echo; er "  revdep-rebuild -q"; echo; revdep-rebuild -q; }
+    which revdep-rebuild &>/dev/null && { echo; eb2 "* "; eg "revdep-rebuild -q"; echo; revdep-rebuild -q; }
 }
 
 vlist() {
@@ -1455,7 +1455,7 @@ start() {
     export SHELL=$(which bash); setterm -blank 0; cl
     mirrorlist="ftp://ftp.linux.org.tr/gentoo http://ftp.linux.org.tr/gentoo ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
 
-    eg="eg"; profile="profile"; vl="variables"; mnt="/mnt/gentoo"
+    eg="easygentoo"; profile="profile"; vl="variables"; mnt="/mnt/gentoo"
     lt="latest-stage3.txt"; compiled="compiled.txt"
     
     [[ ! -e "${compiled}" ]] && touch ${compiled}
@@ -1587,7 +1587,7 @@ check() {
     done
     
     [[ -e adapters.eg ]] && adapters_found="$(cat adapters.eg | tr '\n' ' ' | sed 's/ *$//')"
-    [[ -z "${adapters_found}" ]] && { echo; er "Looks like we don't have any network adapters. Setup is unable to continue. Exiting now..." ; echo; echo; exit 1; }
+    [[ -z "${adapters_found}" ]] && { echo; er "Looks like there aren't any network adapters. Setup is unable to continue. Exiting now..." ; echo; echo; exit 1; }
 
     a2v "adapters_found=\"${adapters_found}\""
     
@@ -2004,7 +2004,7 @@ get_tar() {
     
     echo "${p}" > sshot.eg
     
-    [[ ! -e "move.eg" ]] && { echo; eb2 "* "; ey "Extracting downloaded files, this may take some time..."; echo; }
+    [[ ! -e "move.eg" ]] && { echo; eb2 "* "; ey "Extracting downloaded files, this may take a while..."; echo; }
     
     while true
     do
