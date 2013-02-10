@@ -836,28 +836,8 @@ k_kernel() {
     [[ $(ls /boot/kernel-eg-*) ]] || genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/eg.cfg --kernname=eg --makeopts=-j${core} --no-mountboot --postclear --save-config all
 }
 
-k_ekstra() {
-    if [ -n "${epkg}" ]; then
-        asama=$(echo; eb2 "* "; eg "Installing extra programs..."; echo; sleep 0.5s)
-        inst "${epkg}"
-    fi
-
-    if [ -e "rc_add.eg" ]; then
-        echo; eb2 "* "; eg "Making ekstra startup adjustments..."; sleep 0.5s
-        chmod +x rc_add.eg; ./rc_add.eg
-    fi
-}
-
 k_must() {
     cl
-    echo; ey "  Determining some necessary packages..."
-    python-updater -p > pu.eg
-    echo; ey "  Installing determined packages..."
-    grep 'emerge' pu.eg | tr ' ' '\n' | grep -v '^$' | grep -v '^*$' | grep -v '^-p$' > pu2.eg
-    echo "--quiet-build" >> pu2.eg
-    $(tr '\n' ' ' < pu2.eg)
-    rm -rf pu.eg pu2.eg
-    
     asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
     inst "dhcpcd gentoolkit";
 
@@ -1483,7 +1463,7 @@ check() {
     
     rm -rf *.cfg *.DIGESTS *.eg *.md5sum *.tmp ${lt} tr ${vl}
     
-    for var in "arch blimit domainname emerge grub hostname keymap setup rootpass userpass username windows"
+    for var in "arch blimit domainname grub hostname keymap setup rootpass userpass username windows"
     do
         unset ${var}
     done
@@ -1493,7 +1473,7 @@ check() {
         unset ${var2}_part ${var2}_label ${var2}_fs ${var2}_mp
     done
     
-    for var3 in "fse fs_exist progs adapters_found core kw tarball type available_cpu_flags econf"
+    for var3 in "fse fs_exist progs adapters_found core kw tarball type available_cpu_flags"
     do
         unset ${var3}
     done
@@ -1721,32 +1701,6 @@ prepare() {
         esac
     }
     
-    levels="rc_battery rc_boot rc_default rc_nonetwork rc_shutdown rc_sysinit"
-
-    for r in ${levels}
-    do
-        wc_l=$(grep "${r} " "${profile}" | wc -w)
-        case ${wc_l} in
-        [2-9]|[1-9][0-9]|[1-9][0-9][0-9])
-            level=$(echo "${r}" | cut -c 4-)
-
-            echo "if [ ! -d /etc/runlevels/${level} ]; then" >> rc_add.eg
-            echo "  mkdir -p /etc/runlevels/${level}" >> rc_add.eg
-            echo "fi" >> rc_add.eg
-
-            ((wc_l++))
-            no="2"
-            while [ "${no}" != "${wc_l}" ]
-            do
-                q=$(grep "${r} " "${profile}" | awk '{ print $'${no}' }')
-                echo "rc-update add ${q} ${level}" >> rc_add.eg; ((no++))
-            done
-
-            echo "$(grep -v ${r} ${profile})" > ${profile}
-        ;;
-        esac
-    done
-    
     rm -rf mount.eg
     echo "normal=$'\e[0m'" >> mount.eg
     echo "red=$'\e[31;01m'" >> mount.eg
@@ -1839,9 +1793,6 @@ prepare() {
             grep "^${s} " ${profile} > p.tmp
             
             case ${s} in
-            emerge)
-                e="x"
-            ;;
             keymap)
                 value="$(awk '{print $2}' p.tmp)"
                 case ${value} in
@@ -1864,12 +1815,6 @@ prepare() {
         
         [[ -n "${value}" ]] && a2v "${s}=\"${value}\""
     done
-
-    if [ -n "$(grep ^emerge ${profile})" ]; then
-        grep "^emerge " ${profile} > p.tmp
-        value="$(sed s:'^emerge ':: p.tmp | sed '{:q;N;s/\n/ /g;t q}' | tr -s [:blank:] ' ')"
-        a2v "export   epkg=\"${value}\""
-    fi
     
     core=$(grep -c processor /proc/cpuinfo); ((core++))
     a2v "core=\"${core}\""
@@ -2537,7 +2482,6 @@ inside() {
     
     k_needed
     [[ "${setup}" == "normal" ]] && { wm; k_nm; k_defaults; }
-    k_ekstra
     
     echo; eb2 "* "; eg "Creating/Updating necessary configuration files..."; sleep 1s
     refresh
@@ -2915,11 +2859,6 @@ report() {
         fi
     
     echo "" >> ${rp}
-    
-    if [ -n "${epkg}" ]; then
-        echo "Extra packages that installed: ${epkg}" >> ${rp}
-        echo "" >> ${rp}
-    fi
     
     echo "Partitions used:" >> ${rp}
 
