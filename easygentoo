@@ -2550,7 +2550,7 @@ inside() {
                 cf "tr_TR.UTF-8 UTF-8"
             ;;
             us)
-                cf "en_US.UTF-8"
+                cf "en_US.UTF-8 UTF-8"
                 cf "en_US ISO-8859-1"
             ;;
             esac
@@ -2558,8 +2558,16 @@ inside() {
             locale-gen &>/dev/null
         ;;
         /etc/localtime)
-            ln -s /usr/share/zoneinfo/Turkey ${d}
-            echo "Turkey" > /etc/timezone
+            case ${keymap} in
+            trq|trf)
+                ln -s /usr/share/zoneinfo/Turkey ${d}
+                echo "Turkey" > /etc/timezone
+            ;;
+            us)
+                ln -s /usr/share/zoneinfo/UTC ${d}
+                echo "UTC" > /etc/timezone
+            ;;
+            esac
         ;;
         /etc/rc.conf)
             cf 'rc_hotplug="!net.*"'
