@@ -2224,8 +2224,9 @@ inside() {
     cf '#disabled'
     cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc 
     -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection 
-    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono 
-    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
+    -ipv6 -java -joystick -kdeprefix -kerberos -kmod -ldap -lm_sensors -minimal 
+	-mono -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs 
+	-xscreensaver -zemberek"'
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
 
