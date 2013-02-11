@@ -4,7 +4,7 @@
 #         Easy Gentoo           #
 # ----------------------------- #
 #                               #
-# another Gentoo install script #
+# a small Gentoo install script #
 #              by               #
 #        Şehidcan Erdim         #
 # sehidcan (at) gmail (dot) com #
@@ -406,7 +406,7 @@ inst() {
             fi
         done
         
-        ### Making records for commands that doesn't get recorded to world file because of --oneshot parameter
+        # Making records for commands that doesn't get recorded to world file because of --oneshot parameter
         [[ "${a}" != "-e system" ]] && mrg -u ${a} 2>&1 > /dev/null
         
         step=""
@@ -1337,7 +1337,6 @@ k_gdm() {
 }
 
 k_xfce() {
-    # inst "xfce4-meta xfce4-notifyd"
     inst "xfwm4 xfce4-notifyd xfce4-panel xfce4-session xfce4-settings xfdesktop"
     step=$(echo; eb2 "* "; eg "Emerging other Xfce packages... "; sleep 0.5s; echo)
     inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
@@ -1530,9 +1529,6 @@ check() {
             ext2|ext3|ext4)
                 fsprogs="e2fsprogs e2fsprogs-libs"
             ;;
-            # jfs)
-                # fsprogs="jfsutils"
-            # ;;
             nfs)
                 fsprogs="nfs-utils"
             ;;
@@ -2225,8 +2221,8 @@ inside() {
     cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc 
     -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection 
     -ipv6 -java -joystick -kdeprefix -kerberos -kmod -ldap -lm_sensors -minimal 
-	-mono -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs 
-	-xscreensaver -zemberek"'
+    -mono -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs 
+    -xscreensaver -zemberek"'
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
 
@@ -2609,8 +2605,6 @@ inside() {
             cf '## ignore bogus icmp errors'
             cf 'net.ipv4.icmp_ignore_bogus_error_responses = 1'
             cf '## Restrict potential illegal acces via links'
-            cf 'fs.protected_hardlinks = 1'
-            cf 'fs.protected_symlinks = 1'
             cf ''
             cf 'vm.min_free_kbytes = 16384'
             

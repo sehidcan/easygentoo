@@ -1,0 +1,37 @@
+# "us" is the default keymap so we don't have to include this line.
+keymap us
+
+# We don't have to write mount points for boot, home, root and swap partitions.
+# It is needed for extra partitions.
+boot sdb1 ichigo
+swap sdb2 kenpachi
+home sdb5 MyFiles xfs
+root sdb6 System ext4
+extra sdb9 Temp reiserfs /var/tmp
+extra sdb6 Portage ext2 /usr/portage
+
+# Pretend that we have a windows installed at third partition of
+# our first HDD (sda: First HDD, sdb: Second HDD).
+windows sda3
+
+# Looks like we are installing 32bit (i686) Gentoo.
+arch i686
+
+# Default value for this is the MBR of the HDD where root partition is.
+# In this case it is "sdb". We don't need this line if this is what we want.
+# Let's say we don't want, then this is the line we need.
+grub sda
+
+# We want a full Xfce desktop.
+setup normal
+
+domainname easygentoo-test
+hostname victim
+
+rootpass ironman
+
+username fiddler
+userpass kido
+
+# Lot's of other people use the same connection, 250 KB/s is a good choice for us.
+blimit 250

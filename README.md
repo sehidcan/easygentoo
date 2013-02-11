@@ -12,7 +12,7 @@ ON A DAILY USED COMPUTER. PLEASE USE AT YOUR OWN RISK.
 I'M NOT A PROGRAMMER AND I CREATED THIS SCRIPT AS A HOBBY FOR MY OWN NEEDS.
 
 I KNOW NOTHING ABOUT SOFTWARE LICENSES, SO THIS CODE
-PILE (>2000 LINES) IS LICENSED UNDER "ALL YOURS".
+PILE (>2500 LINES) IS LICENSED UNDER "ALL YOURS".
 
 THERE MUST BE SOME MISTAKES OR PARTS THAT NEED
 IMPROVING. I RECOMMEND YOU TO USE IT IN A VIRTUAL ENVIRONMENT FIRST.
@@ -72,7 +72,7 @@ for you. Happy compiling!
  9- Create locale.gen
 10- Update make.conf and create package.use
 11- Do a controlled "emerge -e system"
-12- Kernel compilation (genkernel)
+12- Kernel compilation (genkernel) with lots of needed settings/drivers
 13- Emerge grub and create grub.conf
     *** Steps for normal installation ***
     --- Emerge xorg-server and create xorg.conf

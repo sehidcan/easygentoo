@@ -1,0 +1,25 @@
+# Turkish-F is what we want.
+keymap trf
+
+# We don't have to write mount points for boot, home, root and swap partitions.
+# It is needed for extra partitions.
+home sda2 MyFiles ext3
+root sda1 System ext4
+
+# Looks like we are installing 64bit (amd64) Gentoo.
+arch amd64
+
+# Default value for this is the MBR of the HDD where root partition is.
+# If we want to install grub to root partition then we need this (we use sda1 instead of default sda).
+grub sda1
+
+# We want a full Xfce desktop.
+setup normal
+
+domainname easygentoo-test
+hostname victim
+
+rootpass ironman
+
+username fiddler
+userpass kido
