@@ -330,7 +330,7 @@ inst() {
                     cl
                     source "$(pwd)/merge.eg"
                     
-                    [[ -n "${asama}" ]] && echo "${asama}"
+                    [[ -n "${step}" ]] && echo "${step}"
                     
                     echo; ey2 "  Command: "; eg2 "  emerge "; er "${a}"
                     echo; eg2 "  Next packages "; ew2 "($(wc -l < pkg.lst) packages total)"; eg ":"
@@ -409,7 +409,7 @@ inst() {
         ### Making records for commands that doesn't get recorded to world file because of --oneshot parameter
         [[ "${a}" != "-e system" ]] && mrg -u ${a} 2>&1 > /dev/null
         
-        asama=""
+        step=""
     }
     
     if [ "${1}" != "sync" ] && [ -n "${1}" ]; then
@@ -439,7 +439,7 @@ inst() {
 }
 
 k_grub() {
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "grub "; eg "..."; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "grub "; eg "..."; echo; sleep 0.5s)
     inst "grub"
     
     echo; eg2 "  Creating "; er2 "grub.conf"; eg "..."; sleep 0.5s
@@ -559,8 +559,8 @@ k_grub() {
     
     cp grub.eg /boot/grub/grub.conf
 
-    echo; eg2 "  Installing grub to "; er2 "MBR"; eg "..."; sleep 0.5s
-        
+    echo; eg2 "  Installing grub to "; er2 "MBR"; eg "..."; echo; sleep 0.5s
+    
     [[ -n "${boot_part}" ]] && cp /proc/mounts /etc/mtab || grep -v rootfs /proc/mounts > /etc/mtab
 
     fl "/boot/grub/device.map" "0" "0"
@@ -583,17 +583,17 @@ k_grub() {
 }
 
 k_kernel() {
-    asama=$(echo; eb2 "* "; eg "Downloading kernel... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg "Emerging kernel... "; echo; sleep 0.5s)
     inst "genkernel gentoo-sources"
-    asama=$(echo; eb2 "* "; eg "Downloading filesystem tools... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg "Emerging filesystem tools... "; echo; sleep 0.5s)
     inst "${progs}"
     
     case $arch in
     i686)
-        cp /usr/src/linux/arch/x86/configs/i386_defconfig eg.cfg
+        cp /usr/src/linux/arch/x86/configs/i386_defconfig easygentoo.config
     ;;
     amd64)
-        cp /usr/src/linux/arch/x86/configs/x86_64_defconfig eg.cfg
+        cp /usr/src/linux/arch/x86/configs/x86_64_defconfig easygentoo.config
     ;;
     esac
 
@@ -747,10 +747,10 @@ k_kernel() {
 
     for cv in ${all}
     do
-        echo "$(grep -v ${cv} eg.cfg)" > eg.cfg
+        echo "$(grep -v ${cv} easygentoo.config)" > easygentoo.config
     done
 
-    fl "eg.cfg" "0" "0"
+    fl "easygentoo.config" "0" "0"
     
     for cv in ${in}
     do
@@ -831,25 +831,27 @@ k_kernel() {
 
     [[ ! -d "/etc/kernels" ]] && mkdir -p /etc/kernels
 
-    cp eg.cfg /etc/kernels
+    cp easygentoo.config /etc/kernels
     echo; eb2 "* "; eg2 "Compiling kernel... "; er "(genkernel)"; echo; sleep 0.5s
-    genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/eg.cfg --kernname=eg --makeopts=-j${core} --no-mountboot --postclear --save-config all
+    genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/easygentoo.config --kernname=easygentoo --makeopts=-j${core} --no-mountboot --postclear --save-config all
     
-    [[ $(ls /boot/kernel-eg-*) ]] || genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/eg.cfg --kernname=eg --makeopts=-j${core} --no-mountboot --postclear --save-config all
+    [[ $(ls /boot/kernel-eg-*) ]] || genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/easygentoo.config --kernname=easygentoo --makeopts=-j${core} --no-mountboot --postclear --save-config all
 }
 
 k_must() {
     cl
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
     inst "dhcpcd gentoolkit";
 
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "dmidecode" ; eg2 " and "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "dmidecode" ; eg2 " and "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
     inst "--oneshot dmidecode lafilefixer"
 }
 
 k_needed() {
-    asama=$(echo; eb2 "* "; eg "Installing basic tools..."; echo; sleep 0.5s)
-    inst "acpid bash-completion consolekit dbus localepurge ntp sudo"
+    step=$(echo; eb2 "* "; eg "Installing basic tools..."; echo; sleep 0.5s)
+    inst "acpid bash-completion consolekit dbus localepurge net-misc/ntp sudo"
+    
+    sntp -s 0.gentoo.pool.ntp.org &>/dev/null
     
     eselect bashcomp enable --global gentoo
 
@@ -889,7 +891,7 @@ k_needed() {
 }
 
 k_portage() {
-    asama=$(echo; eb2 "* "; eg2 "Updating "; er2 "portage"; eg "... "; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg2 "Updating "; er2 "portage"; eg "... "; sleep 0.5s)
     rm -rf /etc/make.profile
 
     case ${setup} in
@@ -1006,7 +1008,7 @@ wm() {
 }
 
 k_nm() {
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "NetworkManager"; eg "..."; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "NetworkManager"; eg "..."; sleep 0.5s; echo)
     inst "networkmanager nm-applet"
 
     rc-update add NetworkManager default &>/dev/null
@@ -1016,17 +1018,17 @@ k_nm() {
 }
 
 k_defaults() {
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Pulseaudio"; eg "..."; echo)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Pulseaudio"; eg "..."; echo)
     inst "paprefs pulseaudio pavucontrol"
     pa_num=$(eselect esd list | grep -i pulseaudio | tr '[]' ' ' | awk '{ print $1 }')
     eselect esd set ${pa_num}
 }
 
 k_x() {
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Xorg server"; eg "..."; echo)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Xorg server"; eg "..."; echo)
     inst "xorg-server"
     
-    asama=$(echo; eb2 "* "; eg2 "Installing necessary tools"; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Installing necessary tools"; sleep 0.5s; echo)
     inst "dejavu eselect-fontconfig fontconfig mesa-progs setxkbmap"
     
     fl "/home/${username}/.xinitrc" "b" "0"
@@ -1043,7 +1045,7 @@ k_x() {
     ;;
     esac
 
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Xfce"; eg "desktop environment..."; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Xfce"; eg "desktop environment..."; sleep 0.5s; echo)
     k_xfce
     
     usermod -a -G plugdev ${username}
@@ -1078,7 +1080,7 @@ k_x() {
     cf 'gtk-font-name = "DejaVu Sans 9"'
     cf 'gtk-theme-name = "MurrinaBlu"'
     
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Gdm"; eg " login manager..."; echo)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Gdm"; eg " login manager..."; echo)
     k_gdm
     
     active=$(eselect opengl list | grep "xorg-x11" | grep "*")
@@ -1286,6 +1288,10 @@ k_x() {
     cf '    Load  "freetype"'
     cf '    Load  "glx"'
     cf 'EndSection'
+    cf ''
+    cf 'Section "Extensions"'
+    cf '    Option  "Composite"  "Enable"'
+    cf 'EndSection'
     
     fl "/etc/X11/xorg.conf" "b" "d"
     
@@ -1327,15 +1333,18 @@ k_gdm() {
 }
 
 k_xfce() {
-    inst "xfce4-meta"
-    asama=$(echo; eb2 "* "; eg "Installing other Xfce packages... "; sleep 0.5s; echo)
-    if [ "${type}" == "pc" ]; then
-        inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
-    else
-        inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
+    # inst "xfce4-meta xfce4-notifyd"
+    inst "xfwm4 xfce4-notifyd xfce4-panel xfce4-session xfce4-settings xfdesktop"
+    step=$(echo; eb2 "* "; eg "Installing other Xfce packages... "; sleep 0.5s; echo)
+    inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
+    
+    if [ "${type}" == "laptop" ]; then
+        step=$(echo; eb2 "* "; eg "Installing packages needed for laptops..."; sleep 0.5s; echo)
+        inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
+        rc-update add laptop_mode default &>/dev/null
     fi
     
-    asama=$(echo; eb2 "* "; eg2 "Installing "; er2 "Thunar"; eg "... "; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Thunar"; eg "... "; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
     
     fl "/home/${username}/.xinitrc" "0" "0"
@@ -1343,12 +1352,6 @@ k_xfce() {
     cf "export GDK_USE_XFT=1"
     cf "export QT_XFT=true"
     cf "exec $(which ck-launch-session) $(which dbus-launch) --exit-with-session xfce4-session"
-    
-    if [ "${type}" == "laptop" ]; then
-        asama=$(echo; eb2 "* "; eg "Installing packages needed for laptops..."; sleep 0.5s; echo)
-        inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
-        rc-update add laptop_mode default &>/dev/null
-    fi
     
     if [ ! -d "/home/${username}/.config/xfce4/panel" ]; then
         mkdir -p /home/${username}/.config/xfce4/panel
@@ -1368,13 +1371,13 @@ k_xfce() {
 
 k_system() {
     touch sys.eg
-    asama=$(echo; eb2 "* "; eg "Updating system... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg "Updating system... "; echo; sleep 0.5s)
     inst "-e system"
     rm -rf sys.eg
 }
 
 k_check() {
-    asama=$(echo; eb2 "* "; eg "Checking system... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg "Checking system... "; echo; sleep 0.5s)
     inst "-uDN world"
     rdr
 }
@@ -1449,7 +1452,7 @@ check() {
     
     [[ ! -e "${profile}" ]] && { cl; er "  Looks like you don't have a profile. Please create one."; echo; exit 1; }
     
-    rm -rf *.cfg *.DIGESTS *.eg *.md5sum *.tmp ${lt} tr ${vl}
+    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp ${lt} tr ${vl}
     
     for var in "arch blimit domainname grub hostname keymap setup rootpass userpass username windows"
     do
@@ -1861,7 +1864,7 @@ get_tar() {
     
     mirror_check
     
-    which ntpdate &>/dev/null && ntpdate -b -u pool.ntp.org &>/dev/null
+    which sntp &>/dev/null && sntp -b -u pool.ntp.org &>/dev/null
     
     [[ -e "${lt}" ]] && rm -rf ${lt}
     
@@ -2003,12 +2006,13 @@ move() {
     
     cp ${eg} ${mnt} &>/dev/null
     mv ${profile} ${mnt} &>/dev/null
+    mv ${compiled} ${mnt} &>/dev/null
     mv ${vl} ${mnt} &>/dev/null
     mv *.tar.bz2 ${mnt} &>/dev/null
     mv *.eg ${mnt} &>/dev/null
     mv *.tmp ${mnt} &>/dev/null
     
-    rm -rf *.cfg *.DIGESTS *.eg *.md5sum *.tmp tr ${lt} ${vl}
+    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp tr ${lt} ${vl}
     
     touch ${mnt}/chroot.eg &>/dev/null
     
@@ -2207,9 +2211,9 @@ inside() {
     cf '#file systems'
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
     cf '#base system'
-    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit css dbus gdbm gnutls lzo nptl pam policykit profile rar readline sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit css dbus gdbm gnutls lzo minimal nptl pam policykit profile rar readline sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
     cf '#disabled'
-    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc -dso -eds -esd -evo -git -gpm -hal -hunspell -ieee1394 -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono -mysql -ncurses -nss -openexr -oss -spell -static -static-libs -zemberek"'
+    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -mono -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
 
@@ -2343,7 +2347,7 @@ inside() {
     cf "gnome-base/gdm remote consolekit"
     cf "gnome-base/gnome-applets gstreamer networkmanager policykit"
     cf "gnome-base/gnome-session branding"
-    cf "gnome-base/gvfs fuse gdu gphoto2"
+    cf "gnome-base/gvfs fuse gdu gphoto2 -http"
     cf "gnome-base/librsvg nsplugin"
     cf "gnome-extra/gnome-games artworkextra guile"
     cf "gnome-extra/libgsf thumbnail"
@@ -2417,7 +2421,7 @@ inside() {
     cf "net-nds/openldap gnutls"
     cf "net-fs/samba automount"
     cf "net-im/pidgin -gstreamer -perl -python"
-    cf "net-irc/irssi perl"
+    cf "net-irc/irssi -perl"
     cf "net-libs/libproxy -gnome -xulrunner"
     cf "net-libs/opal sip"
     cf "net-libs/ptlib wav"
@@ -2466,10 +2470,10 @@ inside() {
     cf "x11-libs/libX11 xcb"
     cf "x11-libs/qt-core optimized-qmake"
     cf "x11-misc/pcmanfm -gnome"
-    cf "x11-misc/rss-glx xscreensaver"
+    cf "x11-misc/rss-glx -xscreensaver"
     cf "x11-misc/slim branding"
-    cf "x11-misc/xscreensaver new-login"
-    cf "x11-terms/rxvt-unicode perl"
+    cf "x11-misc/xscreensaver new-login -perl"
+    cf "x11-terms/rxvt-unicode -perl"
     cf "x11-terms/aterm background"
     cf "x11-terms/xterm toolbar"
     cf "x11-wm/compiz fuse"
@@ -2620,7 +2624,7 @@ inside() {
             sed -i s:".*hostname=.*":"hostname=\"${hostname}\"": ${trg_file}
         ;;
         /etc/conf.d/hwclock)
-            sed -i s:"clock=.*":"clock=\"local\"": ${trg_file}
+            [[ -n "${windows}" ]] && sed -i s:"clock=.*":"clock=\"local\"": ${trg_file} || sed -i s:"clock=.*":"clock=\"UTC\"": ${trg_file}
             sed -i s:"clock_systohc=.*":"clock_systohc=\"YES\"": ${trg_file}
         ;;
         /etc/conf.d/keymaps)
@@ -2763,7 +2767,7 @@ inside() {
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    inst "--unmerge dmidecode lafilefixer localepurge"
+    inst "--unmerge dmidecode lafilefixer localepurge net-misc/ntp"
     echo "$(grep -v dmidecode ${compiled} | grep -v lafilefixer | grep -v  localepurge)" > ${compiled}
     k_check
     end
@@ -2822,7 +2826,8 @@ end() {
     
     er2 "* "; ey "Deleting temporary files..."; sleep 0.5s; echo
     
-    rm -rf ${lt} *.DIGESTS *.md5sum *.eg tr *.cfg *.tmp *.lst ${vl} &>/dev/null
+    rm -rf /var/tmp/portage/*
+    rm -rf ${lt} *.DIGESTS *.md5sum *.eg tr easygentoo.config *.tmp *.lst ${vl} &>/dev/null
     mv *.tar.bz2 /home/${username}/ &>/dev/null
     mv ${eg} /home/${username}/ &>/dev/null
     mv ${profile} /home/${username}/ &>/dev/null

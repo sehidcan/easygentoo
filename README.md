@@ -1,4 +1,3 @@
--------------------------------------------------------------------------
 YOU ARE FREE TO DISTRIBUTE, CHANGE, CUSTOMIZE OR PUBLISH THIS SCRIPT
 OR ANY PART OF IT.
 
@@ -10,11 +9,15 @@ SCRIPT MAY HAVE LOTS OF BUGS AND/OR MAY CAUSE UNEXPECTED DATA LOSS AND/OR
 MAY WASTE YOUR VALUABLE TIME. IT IS NOT RECOMMENDED TO TEST THIS SCRIPT
 ON A DAILY USED COMPUTER. PLEASE USE AT YOUR OWN RISK.
 
-AS A SIDE NOTE; I'M NOT A PROGRAMMER AND I CREATED THIS SCRIPT AS A HOBBY
-FOR MY OWN NEEDS. THERE MUST BE SOME MISTAKES OR PARTS THAT NEED
+I'M NOT A PROGRAMMER AND I CREATED THIS SCRIPT AS A HOBBY FOR MY OWN NEEDS.
+
+I KNOW NOTHING ABOUT SOFTWARE LICENSES, SO THIS CODE
+PILE (>2000 LINES) IS LICENSED UNDER "ALL YOURS".
+
+THERE MUST BE SOME MISTAKES OR PARTS THAT NEED
 IMPROVING. I RECOMMEND YOU TO USE IT IN A VIRTUAL ENVIRONMENT FIRST.
 DON'T FORGET TO CROSS FINGERS WHILE USING IT ON A REAL MACHINE :)
--------------------------------------------------------------------------
+
 
 Easy Gentoo
 ===========
@@ -31,14 +34,34 @@ These steps are enabled or disabled according to a profile.
 Profile is a simple text file which has the necessary options, settings
 etc. for the installation. (Profile must be named as "profile") With
 a proper profile, it is possible to have a basic system (without X) or
-an Xfce desktop with a few key strokes.
+a ready to use Xfce desktop with a few key strokes.
 
 Using a capable intallation media which has more filesystem utilities,
 you can use "btrfs, jfs, nfs, xfs, reiserfs, ext2, ext3, ext4" in your
 profile for partitions.
 
+Localization is based on your "keymap". English for "us", Turkish for
+"trq" and "trf".
+
+"Easy Gentoo" was tested on lots of machines with different profiles.
+Many successful installations were made. Hope it becomes a time-saver
+for you. Happy compiling!
+
+*** How to use ***
+- Boot from an installation media (ex. Gentoo Minimal Install CD)
+- execute these commands:
+  wget https://raw.github.com/shdcn/easygentoo/master/easygentoo
+  chmod +x easygentoo
+  chmod 755 easygentoo
+- create a profile
+  for more information on profile please read:
+  https://github.com/shdcn/easygentoo/blob/master/profile
+- start script:
+  sh easygentoo
+
+
 *** Steps for basic install ***
- 1- Check if necessary tools/command are available to continue
+ 1- Check if necessary tools/commands are available to continue
  2- Format partitions
  3- Mount partitions
  4- Check mirrors
@@ -67,7 +90,3 @@ profile for partitions.
 20- Create a small report about whole process.
 21- Delete temporary files that script created
 22- Shutdown computer
-
-"Easy Gentoo" was tested on lots of machines with different profiles.
-Many successful installations were made. Hope it becomes a time-saver
-for you. Happy compiling!
