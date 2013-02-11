@@ -74,7 +74,7 @@ for you. Happy compiling!
 11- Do a controlled "emerge -e system"
 12- Kernel compilation (genkernel) with lots of needed settings/drivers
 13- Emerge grub and create grub.conf
-    *** Steps for normal installation ***
+    *** Steps for normal install ***
     --- Emerge xorg-server and create xorg.conf
     --- Emerge and configure Xfce
     --- Emerge and configure Gdm Login Manager
@@ -88,5 +88,5 @@ for you. Happy compiling!
 18- Unmerge unnecessary packages and do "emerge -uDN world"
 19- Purge unnecessary man pages etc. (localepurge)
 20- Create a small report about whole process.
-21- Delete temporary files that script created
+21- Delete temporary files that were created by script
 22- Shutdown computer

@@ -27,7 +27,8 @@ windows          sda1
 ## arch          desired architecture (i686 or amd64) - default: detected by $(uname -m)
 arch             i686
 
-## grub          where to install grub (hdc, sdb, sda3...) - default: root partition
+## grub          where to install grub (hdc, sdb, sda3...) (none=disabled) - default: root partition
+## grub          none
 grub             hda
 
 ## setup         enable/disable audio/video codec USE flags (disabled for basic, enabled for normal) - default: basic
