@@ -1433,10 +1433,6 @@ start() {
     eg="easygentoo"; profile="profile"; vl="variables"; mnt="/mnt/gentoo"
     lt="latest-stage3.txt"; compiled="compiled.txt"
     
-    [[ ! -e "${compiled}" ]] && touch ${compiled}
-    
-    a2v "mirrorlist=\"${mirrorlist}\""
-    
     [[ -e "/chroot.eg" ]] && inside || { intro; check; prepare; get_tar; move; }
 
     exit 0
@@ -1871,6 +1867,8 @@ get_tar() {
     ;;
     esac
     
+    a2v "mirrorlist=\"${mirrorlist}\""
+    
     mirror_check
     
     which sntp &>/dev/null && sntp -b -u pool.ntp.org &>/dev/null
@@ -2058,8 +2056,10 @@ shut() {
 
 inside() {
     [[ -e stop.eg ]] && rm -rf stop.eg
+    [[ ! -e "${compiled}" ]] && touch ${compiled}
     on_off &
     net_watch &
+    
     echo; eg "  !!--Chroot--!!"
     
     fl "/etc/etc-update.conf" "0" "0"
