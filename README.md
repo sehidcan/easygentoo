@@ -37,7 +37,7 @@ a proper profile, it is possible to have a basic system (without X) or
 a ready to use Xfce desktop with a few key strokes.
 
 Using a capable intallation media which has more filesystem utilities,
-you can use "btrfs, jfs, nfs, xfs, reiserfs, ext2, ext3, ext4" in your
+you can use "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs" in your
 profile for partitions.
 
 Localization is based on your "keymap". English for "us", Turkish for

@@ -439,18 +439,18 @@ inst() {
 }
 
 k_grub() {
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "grub "; eg "..."; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "grub "; eg "..."; echo; sleep 0.5s)
     inst "grub"
     
     echo; eg2 "  Creating "; er2 "grub.conf"; eg "..."; sleep 0.5s
 
-    krnl="$(ls /boot/kernel-eg*)"
+    krnl="$(ls /boot/kernel-${eg}*)"
 
-    [[ -e "${krnl}" ]] && krnl2="$(ls /boot/kernel-eg* | cut -c 6-)" || krnl2="/kernel-not-available"
+    [[ -e "${krnl}" ]] && krnl2="$(ls /boot/kernel-${eg}* | cut -c 6-)" || krnl2="/kernel-not-available"
 
-    init="$(ls /boot/initramfs-eg*)"
+    init="$(ls /boot/initramfs-${eg}*)"
 
-    [[ -e "${init}" ]] && init2="$(ls /boot/initramfs-eg* | cut -c 6-)" || init2="/initramfs-not-available"
+    [[ -e "${init}" ]] && init2="$(ls /boot/initramfs-${eg}* | cut -c 6-)" || init2="/initramfs-not-available"
     
     [[ -n "${boot_part}" ]] && bn="$(echo ${boot_part} | cut -c 4-)"
 
@@ -833,22 +833,22 @@ k_kernel() {
 
     cp easygentoo.config /etc/kernels
     echo; eb2 "* "; eg2 "Compiling kernel... "; er "(genkernel)"; echo; sleep 0.5s
-    genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/easygentoo.config --kernname=easygentoo --makeopts=-j${core} --no-mountboot --postclear --save-config all
+    genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/easygentoo.config --kernname=${eg} --makeopts=-j${core} --no-mountboot --postclear --save-config all
     
-    [[ $(ls /boot/kernel-eg-*) ]] || genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/easygentoo.config --kernname=easygentoo --makeopts=-j${core} --no-mountboot --postclear --save-config all
+    [[ $(ls /boot/kernel-${eg}-*) ]] || genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/easygentoo.config --kernname=${eg} --makeopts=-j${core} --no-mountboot --postclear --save-config all
 }
 
 k_must() {
     cl
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
     inst "dhcpcd gentoolkit";
 
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "dmidecode" ; eg2 " and "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dmidecode" ; eg2 " and "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
     inst "--oneshot dmidecode lafilefixer"
 }
 
 k_needed() {
-    step=$(echo; eb2 "* "; eg "Installing basic tools..."; echo; sleep 0.5s)
+    step=$(echo; eb2 "* "; eg "Emerging basic tools..."; echo; sleep 0.5s)
     inst "acpid bash-completion consolekit dbus localepurge net-misc/ntp sudo"
     
     sntp -s 0.gentoo.pool.ntp.org &>/dev/null
@@ -1008,27 +1008,27 @@ wm() {
 }
 
 k_nm() {
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "NetworkManager"; eg "..."; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "NetworkManager"; eg "..."; sleep 0.5s; echo)
     inst "networkmanager nm-applet"
 
     rc-update add NetworkManager default &>/dev/null
     
-    # fl "/usr/share/polkit-1/actions/org.freedesktop.NetworkManager.policy" "b" "0"
-    # sed -i s/"<allow_active>.*<\/allow_active>"/"<allow_active>yes<\/allow_active>"/ ${trg_file}
+    fl "/usr/share/polkit-1/actions/org.freedesktop.NetworkManager.policy" "b" "0"
+    sed -i s/"<allow_active>.*<\/allow_active>"/"<allow_active>yes<\/allow_active>"/ ${trg_file}
 }
 
 k_defaults() {
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Pulseaudio"; eg "..."; echo)
-    inst "paprefs pulseaudio pavucontrol"
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Pulseaudio"; eg "..."; echo)
+    inst "paprefs pulseaudio pavucontrol eselect-esd"
     pa_num=$(eselect esd list | grep -i pulseaudio | tr '[]' ' ' | awk '{ print $1 }')
     eselect esd set ${pa_num}
 }
 
 k_x() {
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Xorg server"; eg "..."; echo)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Xorg server"; eg "..."; echo)
     inst "xorg-server"
     
-    step=$(echo; eb2 "* "; eg2 "Installing necessary tools"; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Emerging necessary tools"; sleep 0.5s; echo)
     inst "dejavu eselect-fontconfig fontconfig mesa-progs setxkbmap"
     
     fl "/home/${username}/.xinitrc" "b" "0"
@@ -1045,7 +1045,7 @@ k_x() {
     ;;
     esac
 
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Xfce"; eg "desktop environment..."; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Xfce"; eg "desktop environment..."; sleep 0.5s; echo)
     k_xfce
     
     usermod -a -G plugdev ${username}
@@ -1080,7 +1080,7 @@ k_x() {
     cf 'gtk-font-name = "DejaVu Sans 9"'
     cf 'gtk-theme-name = "MurrinaBlu"'
     
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Gdm"; eg " login manager..."; echo)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Gdm"; eg " login manager..."; echo)
     k_gdm
     
     active=$(eselect opengl list | grep "xorg-x11" | grep "*")
@@ -1112,14 +1112,14 @@ k_x() {
         case ${keymap} in
         trq|trf)
             cf '    Option "XkbLayout" "tr"'
+            case ${keymap} in
+            trf)
+                cf '    Option "XkbVariant" "f"'
+            ;;
+            esac
         ;;
         us)
             cf '    Option "XkbLayout" "us"'
-        ;;
-        esac
-        case ${keymap} in
-        trf)
-            cf '    Option "XkbVariant" "f"'
         ;;
         esac
     cf 'EndSection'
@@ -1256,8 +1256,11 @@ k_x() {
     cf ''
     cf 'Section "Monitor"'
     cf '    Identifier  "monitor"'
+    cf '    VertRefresh  50-70'
+    cf '    HorizSync  30-80'
     cf '    Option  "Enable" "true"'
     cf '    Option  "TargetRefresh" "60"'
+    cf '    Option "RenderAccel" "True"'
         case ${type} in
         laptop)
             cf '    Option  "DPMS" "true"'
@@ -1274,6 +1277,7 @@ k_x() {
     cf 'Section "ServerLayout"'
     cf '    Identifier  "general-layout"'
     cf '    Screen  "general"'
+    cf '    Option "BackingStore" "True"'
     cf 'EndSection'
     cf ''
     cf 'Section "Module"'
@@ -1335,16 +1339,16 @@ k_gdm() {
 k_xfce() {
     # inst "xfce4-meta xfce4-notifyd"
     inst "xfwm4 xfce4-notifyd xfce4-panel xfce4-session xfce4-settings xfdesktop"
-    step=$(echo; eb2 "* "; eg "Installing other Xfce packages... "; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg "Emerging other Xfce packages... "; sleep 0.5s; echo)
     inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     
     if [ "${type}" == "laptop" ]; then
-        step=$(echo; eb2 "* "; eg "Installing packages needed for laptops..."; sleep 0.5s; echo)
+        step=$(echo; eb2 "* "; eg "Emerging packages needed for laptops..."; sleep 0.5s; echo)
         inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
         rc-update add laptop_mode default &>/dev/null
     fi
     
-    step=$(echo; eb2 "* "; eg2 "Installing "; er2 "Thunar"; eg "... "; sleep 0.5s; echo)
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Thunar"; eg "... "; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
     
     fl "/home/${username}/.xinitrc" "0" "0"
@@ -1452,7 +1456,7 @@ check() {
     
     [[ ! -e "${profile}" ]] && { cl; er "  Looks like you don't have a profile. Please create one."; echo; exit 1; }
     
-    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp ${lt} tr ${vl}
+    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp *.lst ${lt} ${vl}
     
     for var in "arch blimit domainname grub hostname keymap setup rootpass userpass username windows"
     do
@@ -1486,7 +1490,7 @@ check() {
     necessary="awk bash cat chmod chroot clear cp cut fdisk free grep ip loadkeys md5sum mkdir mount mv rm sed setterm sha512sum sleep swapoff swapon tar touch tr umount wc wget"
     nicknames="boot extra home root swap"
     
-    a2v "fs_list=\"btrfs ext2 ext3 ext4 jfs hfs nfs ntfs reiserfs xfs\""
+    a2v "fs_list=\"btrfs ext2 ext3 ext4 ntfs reiserfs xfs\""
     
     for nick in ${nicknames}
     do
@@ -1530,9 +1534,9 @@ check() {
             ext2|ext3|ext4)
                 fsprogs="e2fsprogs e2fsprogs-libs"
             ;;
-            jfs)
-                fsprogs="jfsutils"
-            ;;
+            # jfs)
+                # fsprogs="jfsutils"
+            # ;;
             nfs)
                 fsprogs="nfs-utils"
             ;;
@@ -1572,6 +1576,11 @@ prepare() {
             prm="sw,noatime,loop"
             echo "swapoff /dev/${part} > /dev/null 2>&1" >> format.eg
             echo "mkswap -L ${label} /dev/${part} > /dev/null 2>&1" >> format.eg
+        ;;
+        btrfs)
+            prm="defaults,noatime,autodefrag,noacl,compress-force=lzo"
+            echo "umount -l /dev/${part} > /dev/null 2>&1" >> format.eg
+            echo "mkfs.${fs} -L ${label} -s 1024 /dev/${part} > /dev/null 2>&1" >> format.eg
         ;;
         ext2)
             prm="defaults,noatime"
@@ -2012,7 +2021,7 @@ move() {
     mv *.eg ${mnt} &>/dev/null
     mv *.tmp ${mnt} &>/dev/null
     
-    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp tr ${lt} ${vl}
+    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp ${lt} ${vl}
     
     touch ${mnt}/chroot.eg &>/dev/null
     
@@ -2171,8 +2180,6 @@ inside() {
     
     case ${keymap} in
     trq|trf)
-        cf "en_US.UTF-8"
-        cf "en_US ISO-8859-1"
         cf "tr_TR.UTF-8 UTF-8"
     ;;
     us)
@@ -2211,9 +2218,14 @@ inside() {
     cf '#file systems'
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
     cf '#base system'
-    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit css dbus gdbm gnutls lzo minimal nptl pam policykit profile rar readline sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit 
+    css dbus gdbm gnutls lzo nptl pam policykit profile rar readline sqlite sqlite3 
+    symlink truetype udev unicode usb vdpau zlib"'
     cf '#disabled'
-    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -mono -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
+    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc 
+    -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection 
+    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono 
+    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
 
@@ -2231,27 +2243,37 @@ inside() {
     case ${setup} in
     normal)
         cf '#codecs'
-        cf 'USE="${USE} a52 aac avi dts dv encode ffmpeg flac gsm lame mad matroska mp3 mp4 mpeg musepack ogg openal quicktime real speex theora vorbis win32codecs x264 xvid"'
+        cf 'USE="${USE} a52 aac avi dts dv encode ffmpeg flac gsm lame 
+        mad matroska mp3 mp4 mpeg musepack ogg openal quicktime real 
+        speex theora vorbis win32codecs x264 xvid"'
         cf '#multimedia'
-        cf 'USE="${USE} alsa audiofile cdda cddb cdr dri dvb dvd dvdr fam -jack ipod -mjpeg -mp3rtp musicbrainz network pulseaudio sdl -v4l -v4l2 vcd vpx -wmf xine"'
+        cf 'USE="${USE} alsa audiofile cdda cddb cdr dri dvb dvd dvdr 
+        fam -jack ipod -mjpeg -mp3rtp musicbrainz network pulseaudio 
+        sdl -v4l -v4l2 vcd vpx -wmf xine"'
         cf '#internet'
         cf 'USE="${USE} aim icq imap irc jabber msn rss slp yahoo"'
         cf '#X'
         cf 'USE="${USE} cairo dga gif gtk opengl svg tiff X xinerama xpm"'
         cf '#xfce'
-        cf 'USE="${USE} session startup-notification thunar xfce -gnome -kde -nautilus -qt3support -qt4"'
+        cf 'USE="${USE} session startup-notification thunar xfce -gnome 
+        -kde -nautilus -qt3support -qt4"'
     ;;
     basic)
         cf '#codecs'
-        cf 'USE="${USE} -a52 -aac -avi -dts -dv -encode -ffmpeg -flac -gsm -lame -mad -matroska -mp3 -mp4 -mpeg -musepack -ogg -openal -quicktime -real -speex -theora -vorbis -win32codecs -x264 -xvid"'
+        cf 'USE="${USE} -a52 -aac -avi -dts -dv -encode -ffmpeg -flac 
+        -gsm -lame -mad -matroska -mp3 -mp4 -mpeg -musepack -ogg -openal 
+        -quicktime -real -speex -theora -vorbis -win32codecs -x264 -xvid"'
         cf '#multimedia'
-        cf 'USE="${USE} alsa -audiofile -cdda -cddb cdr dri -dvb dvd dvdr fam -jack -ipod -mjpeg -mp3rtp -musicbrainz network pulseaudio sdl -v4l -v4l2 -vcd -vpx -wmf -xine"'
+        cf 'USE="${USE} alsa -audiofile -cdda -cddb cdr dri -dvb dvd 
+        dvdr fam -jack -ipod -mjpeg -mp3rtp -musicbrainz network pulseaudio 
+        sdl -v4l -v4l2 -vcd -vpx -wmf -xine"'
         cf '#internet'
         cf 'USE="${USE} -aim -icq -imap -irc -jabber -msn -rss -slp -yahoo"'
         cf '#X'
         cf 'USE="${USE} -cairo -dga -gif -gtk -opengl -svg -tiff -X -xinerama -xpm"'
         cf '#no desktop environment'
-        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4 -startup-notification -thunar -xfce"'
+        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4 
+        -startup-notification -thunar -xfce"'
     ;;
     esac
     
@@ -2267,7 +2289,7 @@ inside() {
     cf 'INPUT_DEVICES="evdev"'
         case ${keymap} in
         trq|trf)
-            cf 'LINGUAS="tr en"'
+            cf 'LINGUAS="tr"'
         ;;
         us)
             cf 'LINGUAS="en"'
@@ -2347,7 +2369,7 @@ inside() {
     cf "gnome-base/gdm remote consolekit"
     cf "gnome-base/gnome-applets gstreamer networkmanager policykit"
     cf "gnome-base/gnome-session branding"
-    cf "gnome-base/gvfs fuse gdu gphoto2 -http"
+    cf "gnome-base/gvfs fuse gdu -gphoto2 -http"
     cf "gnome-base/librsvg nsplugin"
     cf "gnome-extra/gnome-games artworkextra guile"
     cf "gnome-extra/libgsf thumbnail"
@@ -2535,8 +2557,6 @@ inside() {
         /etc/locale.gen)
             case ${keymap} in
             trq|trf)
-                cf "en_US.UTF-8"
-                cf "en_US ISO-8859-1"
                 cf "tr_TR.UTF-8 UTF-8"
             ;;
             us)
@@ -2752,9 +2772,9 @@ inside() {
     cf "alias reboot='sudo shutdown -r now'"
     cf "alias halt='sudo halt -pi'"
     cf "alias em='sudo emerge'"
-    cf "alias emq='sudo emerge -q'"
     cf "alias emp='sudo emerge -pv'"
     cf "alias ems='sudo emerge --sync'"
+    cf "alias emq='sudo emerge --quiet-build'"
     cf "alias nn='sudo nano'"
     cf "alias mc='sudo nano /etc/portage/make.conf'"
     cf "alias pu='sudo nano /etc/portage/package.use'"
@@ -2785,7 +2805,7 @@ end() {
     
     case ${keymap} in
     trq|trf)
-        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg2 " and "; er2 "English"; eg "..."; sleep 1s; echo
+        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg "..."; sleep 1s; echo
     ;;
     us)
         echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "English"; eg "..."; sleep 1s; echo
@@ -2806,13 +2826,14 @@ end() {
         cf "tr_TR.UTF-8"
         cf "tr_TR ISO-8859-9"
     ;;
+    us)
+        cf "en"
+        cf "en_US"
+        cf "en_US.UTF-8"
+        cf "en_US ISO-8859-1"
+    ;;
     esac
     
-    cf "en"
-    cf "en_US"
-    cf "en_US.UTF-8"
-    cf "en_US ISO-8859-1"
-
     localepurge &>/dev/null
 
     cl
@@ -2826,8 +2847,7 @@ end() {
     
     er2 "* "; ey "Deleting temporary files..."; sleep 0.5s; echo
     
-    rm -rf /var/tmp/portage/*
-    rm -rf ${lt} *.DIGESTS *.md5sum *.eg tr easygentoo.config *.tmp *.lst ${vl} &>/dev/null
+    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp *.lst ${lt} ${vl} &>/dev/null
     mv *.tar.bz2 /home/${username}/ &>/dev/null
     mv ${eg} /home/${username}/ &>/dev/null
     mv ${profile} /home/${username}/ &>/dev/null
