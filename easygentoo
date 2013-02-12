@@ -2170,6 +2170,7 @@ inside() {
     case ${keymap} in
     trq|trf)
         cf "tr_TR.UTF-8 UTF-8"
+        cf "tr_TR ISO-8859-9"
     ;;
     us)
         cf "en_US.UTF-8"
