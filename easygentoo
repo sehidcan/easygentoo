@@ -2654,7 +2654,7 @@ inside() {
             if [ "${setup}" == "basic" ]; then
                 for adapter in ${adapters_found}
                 do
-                    cf 'config_'${adapter}'=( "dhcp" )'
+                    cf 'config_'${adapter}'="dhcp"'
                     cf 'dhcpcd_'${adapter}'="-t 10"'
                     cf 'mtu_'${adapter}'="1492"'
                 done
