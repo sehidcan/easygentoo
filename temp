@@ -51,6 +51,18 @@ fl() {
     fi
 }
 
+no_dup() {
+    if [ -n "${@}" ]; then
+        allofit="${@}"
+        nameonly="$(echo ${allofit} | cut -d'=' -f1)"
+        if [ -n "$(grep ^${nameonly} ${trg_file})" ];then
+            sed -i 's:^${nameonly}=.*:${allofit}:' ${trg_file}
+        else
+            echo "${allofit}" >> ${trg_file}
+        fi
+    fi
+}
+
 cf() {
     [[ -n "${trg_file}" ]] && echo "$@" >> ${trg_file}
 }
@@ -1365,8 +1377,8 @@ k_xfce() {
 
     fl "/etc/conf.d/xdm" "0" "0"
     
-    sed -i s:"^DISPLAYMANAGER=.*":"DISPLAYMANAGER=\"gdm\"": ${trg_file}
-    cf "NEEDS_HALD=\"no\""
+    no_dup DISPLAYMANAGER=\"gdm\"
+    no_dup NEEDS_HALD=\"no\"
     
     chown -fP ${username} ${trg_file}
 }
@@ -2058,9 +2070,9 @@ inside() {
     echo; eg "  !!--Chroot--!!"
     
     fl "/etc/etc-update.conf" "0" "0"
-        
-    sed -i s:"^rm_opts=.*":"rm_opts=\"\"": ${trg_file}
-    sed -i s:"^cp_opts=.*":"cp_opts=\"\"": ${trg_file}
+    
+    no_dup rm_opts=\"\"
+    no_dup cp_opts=\"\"
 
     refresh
     
@@ -2577,13 +2589,13 @@ inside() {
             esac
         ;;
         /etc/rc.conf)
-            sed -i 's:rc_hotplug=.*:rc_hotplug="!net.*":' ${trg_file}
-            sed -i 's:rc_logger=.*:rc_logger="NO":' ${trg_file}
-            sed -i 's:unicode=.*:unicode="YES":' ${trg_file}
-            sed -i 's:rc_sys=.*:rc_sys="":' ${trg_file}
-            sed -i 's:rc_tty_number=.*:rc_tty_number=12:' ${trg_file}
-            sed -i 's:dbus_enable=.*:dbus_enable="YES":' ${trg_file}
-            sed -i 's:hald_enable=.*:hald_enable="NO":' ${trg_file}
+            no_dup rc_hotplug=\"!net.*\"
+            no_dup rc_logger=\"NO\"
+            no_dup unicode=\"YES\"
+            no_dup rc_sys=\"\"
+            no_dup rc_tty_number=12
+            no_dup dbus_enable=\"YES\"
+            no_dup hald_enable=\"NO\"
         ;;
         /etc/sysctl.conf)
             cf '## TCP SYN cookie protection'
@@ -2640,19 +2652,19 @@ inside() {
             sysctl -p &>/dev/null
         ;;
         /etc/conf.d/domainname)
-            cf 'DNSDOMAIN="'${domainname}'"'
-            cf 'NISDOMAIN="'${domainname}'"'
+            no_dup DNSDOMAIN=\"${domainname}\"
+            no_dup NISDOMAIN=\"${domainname}\"
         ;;
         /etc/conf.d/hostname)
-            sed -i s:".*hostname=.*":"hostname=\"${hostname}\"": ${trg_file}
+            no_dup hostname=\"${hostname}\"
         ;;
         /etc/conf.d/hwclock)
-            [[ -n "${windows}" ]] && sed -i s:"clock=.*":"clock=\"local\"": ${trg_file} || sed -i s:"clock=.*":"clock=\"UTC\"": ${trg_file}
-            sed -i s:"clock_systohc=.*":"clock_systohc=\"YES\"": ${trg_file}
+            [[ -n "${windows}" ]] && no_dup clock=\"local\" || no_dup clock=\"UTC\"
+            no_dup clock_systohc=\"YES\"
         ;;
         /etc/conf.d/keymaps)
-            sed -i s:".*keymap=.*":"keymap=\"-u ${keymap}\"": ${trg_file}
-            sed -i s:".*windowkeys=.*":"windowkeys=\"YES\"": ${trg_file}
+            no_dup windowkeys=\"YES\"
+            no_dup keymap=\"-u ${keymap}\"
         ;;
         /etc/conf.d/net)
             cf 'dns_domain_lo="gentoo.powered"'
@@ -2722,12 +2734,14 @@ inside() {
     ;;
     esac
     
+    fl "/etc/conf.d/consolefont" "0" "0"
+    
     case ${keymap} in
     trq|trf)
-        [[ -e "/etc/conf.d/consolefont" ]] && sed -i 's:.*consolefont=.*:consolefont="iso09.16":' /etc/conf.d/consolefont || echo 'consolefont="iso09.16"' >> /etc/conf.d/consolefont
+        no_dup consolefont=\"iso09.16\"
     ;;
     us)
-        [[ -e "/etc/conf.d/consolefont" ]] && sed -i 's:.*consolefont=.*:consolefont="default8x16":' /etc/conf.d/consolefont || echo 'consolefont="default8x16"' >> /etc/conf.d/consolefont
+        no_dup consolefont=\"default8x16\"
     ;;
     esac
     
@@ -2799,12 +2813,10 @@ inside() {
 end() {
     fl "/etc/portage/make.conf" "0" "0"
 
-    sed -i "s:FEATURES=.*:FEATURES=\"-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox\":" ${trg_file}
-
-    echo "$(grep -v 'FETCHCOMMAND=' ${trg_file} | grep -v 'RESUMECOMMAND=')" > ${trg_file}
+    no_dup FEATURES=\"-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox\"
     
-    cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
-    cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+    no_dup FETCHCOMMAND=\"$(which wget) -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}\"
+    no_dup RESUMECOMMAND=\"$(which wget) -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}\"
     
     case ${keymap} in
     trq|trf)
