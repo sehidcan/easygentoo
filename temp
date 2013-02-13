@@ -52,7 +52,7 @@ fl() {
 }
 
 no_dup() {
-    if [ -n "${@}" ]; then
+    if [ -n "${@}" ] && [ -n "${trg_file}" ]; then
         allofit="${@}"
         nameonly="$(echo ${allofit} | cut -d'=' -f1)"
         if [ -n "$(grep ^${nameonly} ${trg_file})" ];then
@@ -748,13 +748,8 @@ k_kernel() {
 
     module="${audio} ${cam} ${ether_10_100} ${ether_1000} ${ether_10000} ${video}"
     
-    all="${in} ${module} ${out}"
-
-    for cv in ${all}
-    do
-        echo "$(grep -v ${cv} easygentoo.config)" > easygentoo.config
-    done
-
+    # all="${in} ${module} ${out}"
+    
     fl "easygentoo.config" "0" "0"
     
     for cv in ${in}
@@ -802,7 +797,7 @@ k_kernel() {
         ;;
         esac
         
-        cf "${cv}=${value}"
+        no_dup ${cv}=${value}
     done
 
     for cv in ${module}
@@ -825,13 +820,13 @@ k_kernel() {
         ;;
         esac
         
-        cf "${cv}=${value}"
+        no_dup ${cv}=${value}
     done
 
     for cv in ${out}
     do
         value="n"
-        cf "${cv}=${value}"
+        no_dup ${cv}=${value}
     done
 
     [[ ! -d "/etc/kernels" ]] && mkdir -p /etc/kernels
@@ -1064,7 +1059,7 @@ k_x() {
     
     fl "/etc/env.d/90xsession" "0" "d"
     
-    cf "XSESSION=\"${session}\""
+    no_dup XSESSION=\"${session}\"
     
     fl "/home/${username}/.gtkrc-2.0" "b" "d"
     
@@ -1348,7 +1343,7 @@ k_gdm() {
 
 k_xfce() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Xfce"; eg " desktop environment..."; sleep 0.5s; echo)
-    inst "xfwm4 xfce4-notifyd xfce4-panel xfce4-session xfce4-settings xfdesktop"
+    inst "xfce4-meta xfce4-notifyd"
     step=$(echo; eb2 "* "; eg "Emerging other Xfce packages..."; sleep 0.5s; echo)
     inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     
@@ -2227,13 +2222,13 @@ inside() {
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
     cf '#base system'
     cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit 
-    css dbus gdbm gnutls lzo nptl pam policykit profile rar readline sqlite sqlite3 
-    symlink truetype udev unicode usb vdpau zlib"'
+    css dbus gdbm gnutls kmod lzo nptl pam policykit profile rar readline sqlite 
+    sqlite3 symlink truetype udev unicode usb vdpau zlib"'
     cf '#disabled'
     cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc 
     -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection 
-    -ipv6 -java -joystick -kdeprefix -kerberos -kmod -ldap -lm_sensors -minimal 
-    -mono -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs 
+    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono 
+    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs 
     -xscreensaver -zemberek"'
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
@@ -2667,14 +2662,14 @@ inside() {
             no_dup keymap=\"-u ${keymap}\"
         ;;
         /etc/conf.d/net)
-            cf 'dns_domain_lo="gentoo.powered"'
+            no_dup dns_domain_lo=\"gentoo.powered\"
             
             if [ "${setup}" == "basic" ]; then
                 for adapter in ${adapters_found}
                 do
-                    cf 'config_'${adapter}'="dhcp"'
-                    cf 'dhcpcd_'${adapter}'="-t 10"'
-                    cf 'mtu_'${adapter}'="1492"'
+                    no_dup config_${adapter}=\"dhcp\"
+                    no_dup dhcpcd_${adapter}=\"-t 10\"
+                    no_dup mtu_${adapter}=\"1492\"
                 done
             fi
         ;;
