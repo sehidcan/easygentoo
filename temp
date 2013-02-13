@@ -56,7 +56,7 @@ no_dup() {
         allofit="${@}"
         nameonly="$(echo ${allofit} | cut -d'=' -f1)"
         if [ -n "$(grep ^${nameonly} ${trg_file})" ];then
-            sed -i 's:^${nameonly}=.*:${allofit}:' ${trg_file}
+            sed -i s:"^${nameonly}=.*":"${allofit}": ${trg_file}
         else
             echo "${allofit}" >> ${trg_file}
         fi
@@ -797,7 +797,7 @@ k_kernel() {
         ;;
         esac
         
-        no_dup ${cv}=${value}
+        no_dup ${cv}'='${value}
     done
 
     for cv in ${module}
@@ -820,13 +820,13 @@ k_kernel() {
         ;;
         esac
         
-        no_dup ${cv}=${value}
+        no_dup ${cv}'='${value}
     done
 
     for cv in ${out}
     do
         value="n"
-        no_dup ${cv}=${value}
+        no_dup ${cv}'='${value}
     done
 
     [[ ! -d "/etc/kernels" ]] && mkdir -p /etc/kernels
@@ -1059,7 +1059,7 @@ k_x() {
     
     fl "/etc/env.d/90xsession" "0" "d"
     
-    no_dup XSESSION=\"${session}\"
+    no_dup 'XSESSION="'${session}'"'
     
     fl "/home/${username}/.gtkrc-2.0" "b" "d"
     
@@ -1372,8 +1372,8 @@ k_xfce() {
 
     fl "/etc/conf.d/xdm" "0" "0"
     
-    no_dup DISPLAYMANAGER=\"gdm\"
-    no_dup NEEDS_HALD=\"no\"
+    no_dup 'DISPLAYMANAGER="gdm"'
+    no_dup 'NEEDS_HALD="no"'
     
     chown -fP ${username} ${trg_file}
 }
@@ -2066,8 +2066,8 @@ inside() {
     
     fl "/etc/etc-update.conf" "0" "0"
     
-    no_dup rm_opts=\"\"
-    no_dup cp_opts=\"\"
+    no_dup 'rm_opts=""'
+    no_dup 'cp_opts=""'
 
     refresh
     
@@ -2584,13 +2584,13 @@ inside() {
             esac
         ;;
         /etc/rc.conf)
-            no_dup rc_hotplug=\"!net.*\"
-            no_dup rc_logger=\"NO\"
-            no_dup unicode=\"YES\"
-            no_dup rc_sys=\"\"
-            no_dup rc_tty_number=12
-            no_dup dbus_enable=\"YES\"
-            no_dup hald_enable=\"NO\"
+            no_dup 'rc_hotplug="!net.*"'
+            no_dup 'rc_logger="NO"'
+            no_dup 'unicode="YES"'
+            no_dup 'rc_sys=""'
+            no_dup 'rc_tty_number=12'
+            no_dup 'dbus_enable="YES"'
+            no_dup 'hald_enable="NO"'
         ;;
         /etc/sysctl.conf)
             cf '## TCP SYN cookie protection'
@@ -2647,29 +2647,29 @@ inside() {
             sysctl -p &>/dev/null
         ;;
         /etc/conf.d/domainname)
-            no_dup DNSDOMAIN=\"${domainname}\"
-            no_dup NISDOMAIN=\"${domainname}\"
+            no_dup 'DNSDOMAIN="'${domainname}'"'
+            no_dup 'NISDOMAIN="'${domainname}'"'
         ;;
         /etc/conf.d/hostname)
-            no_dup hostname=\"${hostname}\"
+            no_dup 'hostname="'${hostname}'"'
         ;;
         /etc/conf.d/hwclock)
-            [[ -n "${windows}" ]] && no_dup clock=\"local\" || no_dup clock=\"UTC\"
-            no_dup clock_systohc=\"YES\"
+            [[ -n "${windows}" ]] && no_dup 'clock="local"' || no_dup 'clock="UTC"'
+            no_dup 'clock_systohc="YES"'
         ;;
         /etc/conf.d/keymaps)
-            no_dup windowkeys=\"YES\"
-            no_dup keymap=\"-u ${keymap}\"
+            no_dup 'windowkeys="YES"'
+            no_dup 'keymap="-u '${keymap}'"'
         ;;
         /etc/conf.d/net)
-            no_dup dns_domain_lo=\"gentoo.powered\"
+            no_dup 'dns_domain_lo="gentoo.powered"'
             
             if [ "${setup}" == "basic" ]; then
                 for adapter in ${adapters_found}
                 do
-                    no_dup config_${adapter}=\"dhcp\"
-                    no_dup dhcpcd_${adapter}=\"-t 10\"
-                    no_dup mtu_${adapter}=\"1492\"
+                    no_dup 'config_'${adapter}'="dhcp"'
+                    no_dup 'dhcpcd_'${adapter}'="-t 10"'
+                    no_dup 'mtu_'${adapter}'="1492"'
                 done
             fi
         ;;
@@ -2733,10 +2733,10 @@ inside() {
     
     case ${keymap} in
     trq|trf)
-        no_dup consolefont=\"iso09.16\"
+        no_dup 'consolefont="iso09.16"'
     ;;
     us)
-        no_dup consolefont=\"default8x16\"
+        no_dup 'consolefont="default8x16"'
     ;;
     esac
     
@@ -2808,10 +2808,10 @@ inside() {
 end() {
     fl "/etc/portage/make.conf" "0" "0"
 
-    no_dup FEATURES=\"-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox\"
+    no_dup 'FEATURES="-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox"'
     
-    no_dup FETCHCOMMAND=\"$(which wget) -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}\"
-    no_dup RESUMECOMMAND=\"$(which wget) -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}\"
+    no_dup 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+    no_dup 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
     
     case ${keymap} in
     trq|trf)
