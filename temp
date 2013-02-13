@@ -281,9 +281,8 @@ inst() {
         fl "pkg_dup.lst" "0" "d"
         cp pkg.lst ${trg_file}
         
-        #deleteme
         case "${a}" in
-        "-uDN system")
+        "-e system")
             emerge -pv --nodeps gentoo-sources | grep ebuild | grep gentoo-sources | tr -s '[:blank:]' ' ' | sed -e 's:\[[0-9].*\]::' -e 's:\[.*ebuild.*\] :=:' -e 's: .*::' >> ${trg_file}
             emerge -pv --nodeps genkernel | grep ebuild | grep genkernel | tr -s '[:blank:]' ' ' | sed -e 's:\[[0-9].*\]::' -e 's:\[.*ebuild.*\] :=:' -e 's: .*::' >> ${trg_file}
         ;;
@@ -419,9 +418,8 @@ inst() {
             fi
         done
         
-        #deleteme
         # Making records for commands that doesn't get recorded to world file because of --oneshot parameter
-        [[ "${a}" != "-uDN system" ]] && mrg -u ${a} 2>&1 > /dev/null
+        [[ "${a}" != "-e system" ]] && mrg -u ${a} 2>&1 > /dev/null
         
         step=""
     }
@@ -1380,13 +1378,7 @@ k_xfce() {
     chown -fP ${username} ${trg_file}
 }
 
-#deleteme
 k_system() {
-    step=$(echo; eb2 "* "; eg "Updating system..."; echo; sleep 0.5s)
-    inst "-uDN system"
-}
-
-k_system2() {
     touch sys.eg
     step=$(echo; eb2 "* "; eg "Updating system..."; echo; sleep 0.5s)
     inst "-e system"
