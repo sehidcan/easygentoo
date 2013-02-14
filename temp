@@ -2210,7 +2210,7 @@ inside() {
     cf ''
     cf '#base system'
     cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit '
-    cf '    css dbus gdbm gnutls kmod lzo nptl pam policykit profile rar readline sqlite '
+    cf '    css dbus -gdbm gnutls kmod lzo nptl pam policykit profile rar readline sqlite '
     cf '    sqlite3 symlink truetype udev unicode usb vdpau zlib"'
     cf ''
     cf '#disabled'
@@ -2248,15 +2248,15 @@ inside() {
         cf ''
         cf '#multimedia'
         cf 'USE="${USE} alsa audiofile cdda cddb cdr dri dvb dvd dvdr '
-        cf '    fam -jack ipod -mjpeg -mp3rtp musicbrainz network -pulseaudio '
-        cf '    sdl -v4l -v4l2 vcd vpx -wmf xine"'
+        cf '    fam -jack ipod -mjpeg -mp3rtp -musicbrainz network -pulseaudio '
+        cf '    sdl -v4l -v4l2 vcd vpx -wmf -xine"'
         cf ''
         cf '#X'
-        cf 'USE="${USE} cairo dga gif gtk opengl svg tiff X xinerama xpm"'
+        cf 'USE="${USE} cairo dga gif gtk opengl svg tiff X -xinerama xpm"'
         cf ''
         cf '#xfce'
-        cf 'USE="${USE} session startup-notification thunar xfce -gnome '
-        cf '    -kde -nautilus -qt3support -qt4"'
+        cf 'USE="${USE} startup-notification thunar xfce -gnome -kde '
+        cf '    -nautilus -qt3support -qt4"'
     ;;
     basic)
         cf '#codecs'
@@ -2284,10 +2284,10 @@ inside() {
     amd64)
         cf '#64bit'
         cf 'USE="${USE} multilib"'
+        cf ''
     ;;
     esac
     
-    cf ''
     cf 'VIDEO_CARDS="vesa"'
     cf 'INPUT_DEVICES="evdev"'
         case ${keymap} in
@@ -2299,12 +2299,12 @@ inside() {
         ;;
         esac
     cf 'AUTOCLEAN="yes"'
-    cf 'CONFIG_PROTECT="/etc /etc/fstab /etc/hosts /etc/locale.gen 
-    /etc/localtime /etc/rc.conf /etc/sudoers /etc/sysctl.conf 
-    /etc/X11/xorg.conf.d /etc/portage/package.use /etc/conf.d/domainname 
-    /etc/conf.d/hostname /etc/conf.d/hwclock /etc/conf.d/keymaps 
-    /etc/conf.d/net /etc/modprobe.d/blacklist.conf /etc/portage/env 
-    /etc/X11/gdm /usr/share/config/kdm"'
+    cf 'CONFIG_PROTECT="/etc /etc/fstab /etc/hosts /etc/locale.gen '
+    cf '    /etc/localtime /etc/rc.conf /etc/sudoers /etc/sysctl.conf '
+    cf '    /etc/X11/xorg.conf.d /etc/portage/package.use /etc/conf.d/domainname '
+    cf '    /etc/conf.d/hostname /etc/conf.d/hwclock /etc/conf.d/keymaps '
+    cf '    /etc/conf.d/net /etc/modprobe.d/blacklist.conf /etc/portage/env '
+    cf '    /etc/X11/gdm /usr/share/config/kdm"'
     cf 'PORTDIR="/usr/portage"'
     cf 'PORTAGE_TMPDIR="/var/tmp"'
     cf 'PORTAGE_COMPRESS="bzip2"'
