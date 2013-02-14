@@ -731,8 +731,6 @@ k_kernel() {
 
     module="${audio} ${cam} ${ether_10_100} ${ether_1000} ${ether_10000} ${video}"
     
-    # all="${in} ${module} ${out}"
-    
     fl "easygentoo.config" "0" "0"
     
     for cv in ${in}
@@ -2803,6 +2801,10 @@ inside() {
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
     umrg "dmidecode lafilefixer localepurge net-misc/ntp"
+    #temp
+    inst "mpg123"
+    get_files "http://cache.gizmodo.com/assets/resources/mp3/Woman128.mp3"
+    #temp
     k_check
     end
 }
