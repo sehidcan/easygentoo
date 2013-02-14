@@ -1028,6 +1028,16 @@ k_alsa() {
         echo "pcm.!default { type hw card ${sound_card_guess} }" > /etc/asound.conf
         echo "ctl.!default { type hw card ${sound_card_guess} }" >> /etc/asound.conf
     fi
+    
+    fl "/etc/conf.d/alsasound" "0" "0"
+    no_dup 'RESTORE_ON_START="yes"'
+    no_dup 'SAVE_ON_STOP="yes"'
+    no_dup 'LOAD_ON_START="yes"'
+    
+    amixer set Master unmute
+    amixer set PCM unmute
+    
+    alsactl -f /var/lib/alsa/asound.state store
 }
 
 k_x() {
@@ -1421,11 +1431,11 @@ refresh() {
 }
 
 lff() {
-    which lafilefixer &>/dev/null && { echo; eb2 "* "; eg "lafilefixer --justfixit"; echo; lafilefixer --justfixit | grep -v "skipping"; }
+    which lafilefixer &>/dev/null && { echo; eb2 "* "; eg "lafilefixer --justfixit"; echo; lafilefixer --justfixit; }
 }
 
 rdr() {
-    which revdep-rebuild &>/dev/null && { echo; eb2 "* "; eg "revdep-rebuild -q"; echo; revdep-rebuild -q; }
+    which revdep-rebuild &>/dev/null && { echo; eb2 "* "; eg "revdep-rebuild"; echo; revdep-rebuild; }
 }
 
 vlist() {
@@ -2132,11 +2142,8 @@ inside() {
     cf 'GENTOO_MIRRORS="'${mirrorlist}'"'
     cf 'RSYNC="rsync://rsync2.us.gentoo.org rsync://rsync3.us.gentoo.org rsync://rsync25.us.gentoo.org"'
         if [ "${blimit}" -gt "0" ]; then
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-        else
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+            cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
+            cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
     cf ''
@@ -2317,11 +2324,8 @@ inside() {
     cf 'GENTOO_MIRRORS="'${mirrorlist}'"'
     cf 'RSYNC="rsync://rsync2.us.gentoo.org rsync://rsync3.us.gentoo.org rsync://rsync25.us.gentoo.org"'
         if [ "${blimit}" -gt "0" ]; then
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-        else
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+            cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
+            cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
         if [ "${setup}" == "normal" ]; then
@@ -2562,6 +2566,7 @@ inside() {
             case ${keymap} in
             trq|trf)
                 cf "tr_TR.UTF-8 UTF-8"
+                cf "tr_TR ISO-8859-9"
             ;;
             us)
                 cf "en_US.UTF-8 UTF-8"
@@ -2766,6 +2771,7 @@ inside() {
         echo "%users   ALL=(root) NOPASSWD: $(which shutdown)" >> /etc/sudoers
         echo "%users   ALL=(root) NOPASSWD: $(which reboot)" >> /etc/sudoers
         echo "%users   ALL=(root) NOPASSWD: $(which halt)" >> /etc/sudoers
+        echo "%users   ALL=(root) NOPASSWD: $(which nano)" >> /etc/sudoers
         echo "%users   ALL=(root) NOPASSWD: $(which emerge)" >> /etc/sudoers
     fi
 
@@ -2783,6 +2789,7 @@ inside() {
     cf "export XDG_CONFIG_HOME=\"/home/${username}/.config\""
     cf "alias reboot='sudo shutdown -r now'"
     cf "alias halt='sudo halt -pi'"
+    cf "alias shutdown='sudo shutdown -h now'"
     cf "alias em='sudo emerge'"
     cf "alias emp='sudo emerge -pv'"
     cf "alias ems='sudo emerge --sync'"
@@ -2810,8 +2817,7 @@ end() {
 
     no_dup 'FEATURES="-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox"'
     
-    no_dup 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
-    no_dup 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+    sed -i -e '/^FETCHCOMMAND=.*$/d' -e '/^RESUMECOMMAND=.*$/d' ${trg_file}
     
     case ${keymap} in
     trq|trf)
