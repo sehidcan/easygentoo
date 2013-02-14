@@ -255,7 +255,7 @@ inst() {
                 continue
             ;;
             *)
-                sed -i "/.*${p_line}.*/d" ${trg_file}
+                sed -i "\!.*${p_line}.*!d" ${trg_file}
             ;;
             esac
         done < ${trg_file}
@@ -307,7 +307,7 @@ inst() {
                 ;;
                 esac
             
-                sed -i "/.*${pkg}.*/d" pkg_dup.lst
+                sed -i "\!.*${pkg}.*!d" pkg_dup.lst
             fi
         done
     }
@@ -316,19 +316,19 @@ inst() {
         fl "pkg.lst" "0" "0"
         while true
         do
-            read -r package < "${trg_file}"
+            read -r package < ${trg_file}
             
             if [ -z "${package}" ]; then
                 break
             else
-                if [ -e "pkg.lst" ]; then
+                if [ -e "${trg_file}" ]; then
                     cl
                     source "$(pwd)/merge.eg"
                     
                     [[ -n "${step}" ]] && echo "${step}"
                     
                     echo; ey2 "  Command: "; eg2 "  emerge "; er "${a}"
-                    echo; eg2 "  Next packages "; ew2 "($(wc -l < pkg.lst) packages total)"; eg ":"
+                    echo; eg2 "  Next packages "; ew2 "($(wc -l < ${trg_file}) packages total)"; eg ":"
                     
                     p_numb="1"
                     while read p_input
@@ -346,7 +346,7 @@ inst() {
                         ;;
                         esac
                         ((p_numb++))
-                    done < pkg.lst
+                    done < ${trg_file}
                     
                     echo
                     
@@ -383,7 +383,7 @@ inst() {
                 
                 case $? in
                 0)
-                    sed -i "/.*${package}.*/d" ${trg_file}
+                    sed -i "\!.*${package}.*!d" ${trg_file}
                     
                     if [ -z "$(grep $(echo ${package} | cut -c 2-) ${compiled})" ]; then
                         echo "${package}" | cut -c 2- >> ${compiled}
@@ -551,9 +551,7 @@ k_grub() {
     
     [[ -n "${boot_part}" ]] && cp /proc/mounts /etc/mtab || grep -v rootfs /proc/mounts > /etc/mtab
 
-    fl "/boot/grub/device.map" "0" "0"
-
-    [[ -e "${trg_file}" ]] && sed -i "/.*fd[0-9].*/d" ${trg_file}
+    [[ -e "/boot/grub/device.map" ]] && sed -i "\!.*fd[0-9].*!d" /boot/grub/device.map
     
     fl "ginst.eg" "0" "d"
     
@@ -1472,7 +1470,7 @@ check() {
     case ${lc_e} in
     [1-9]|[1-9][0-9])
         new_line="$(grep emerge ${profile} | cut -c 8- | sed '{:q;N;s/\n/ /g;t q}')"
-        sed -i "/.*emerge.*/d" ${profile}
+        sed -i "\!.*emerge.*!d" ${profile}
         echo "emerge ${new_line}" >> ${profile}
     ;;
     esac
@@ -2554,7 +2552,7 @@ inside() {
             cp fstab.eg ${d}
         ;;
         /etc/hosts)
-            sed -i s:"^127.0.0.1.*":"127.0.0.1      ${hostname}.${domainname} ${hostname} gentoo": ${trg_file}
+            sed -i s:"^127.0.0.1.*":"127.0.0.1      ${hostname}.${domainname} ${hostname} gentoo": ${d}
         ;;
         /etc/locale.gen)
             case ${keymap} in
