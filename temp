@@ -203,27 +203,9 @@ mrg() {
     CONFIG_PROTECT_MASK="/etc" emerge --quiet-build $@ 2> /dev/null
 }
 
-mrgs() {
-    MAKEOPTS="-j1" CONFIG_PROTECT_MASK="/etc" emerge --quiet-build $@ 2> /dev/null
-}
-
-mrgf() {
-    CONFIG_PROTECT_MASK="/etc" emerge --quiet-build -f --nodeps $@ 2> /dev/null
-}
-
-mrgp() {
-    case ${1} in
-    cf)
-        echo "emerge -pv ${a} 2>&1 | grep -v '^\['" > mrgp.tmp
-        sh mrgp.tmp > data.tmp
-        rm -rf mrgp.tmp
-    ;;
-    ml)
-        echo "emerge -pv ${a} 2>&1 | grep '^\['" > mrgp.tmp
-        sh mrgp.tmp > data.tmp
-        rm -rf mrgp.tmp
-    ;;
-    esac
+umrg() {
+    cl; eb2 "* "; eg2 "emerge "; er "--unmerge ${@}"
+    CONFIG_PROTECT_MASK="/etc" emerge --quiet-build --unmerge $@ 2> /dev/null && { sed -i "/.*\/$@.*/d" ${compiled}; sed -i "/.*\/$@.*/d" pkg.lst; }
 }
 
 get_files() {
@@ -273,7 +255,7 @@ inst() {
                 continue
             ;;
             *)
-                echo "$(grep -v ${p_line} ${trg_file})" > ${trg_file}
+                sed -i "/.*${p_line}.*/d" ${trg_file}
             ;;
             esac
         done < ${trg_file}
@@ -307,7 +289,8 @@ inst() {
                     next="no"
                     while [ "${next}" != "yes" ]
                     do
-                        mrgf ${pkg}
+                        CONFIG_PROTECT_MASK="/etc" emerge --quiet-build -f --nodeps ${pkg} 2> /dev/null
+                        
                         case $? in
                         0)
                             cf "${pkg}"; next="yes"
@@ -324,7 +307,7 @@ inst() {
                 ;;
                 esac
             
-                echo "$(grep -v ${pkg} pkg_dup.lst)" > pkg_dup.lst
+                sed -i "/.*${pkg}.*/d" pkg_dup.lst
             fi
         done
     }
@@ -382,6 +365,12 @@ inst() {
                 
                 shut
                 
+                case ${package} in
+                *sys-apps/kmod-*)
+                    umrg "module-init-tools"
+                ;;
+                esac
+                
                 if [ -e "sys.eg" ]; then
                     mrg -e --oneshot --nodeps ${package}
                 else
@@ -394,7 +383,8 @@ inst() {
                 
                 case $? in
                 0)
-                    echo "$(grep -v ${package} ${trg_file})" > ${trg_file}
+                    sed -i "/.*${package}.*/d" ${trg_file}
+                    
                     if [ -z "$(grep $(echo ${package} | cut -c 2-) ${compiled})" ]; then
                         echo "${package}" | cut -c 2- >> ${compiled}
                     fi
@@ -429,21 +419,14 @@ inst() {
         cf "a=\"${1}\""
         
         source "$(pwd)/merge.eg"
+        echo "emerge -pv ${a} 2>&1 | grep '^\['" > cmd.eg
+        sh cmd.eg > data.tmp; rm -rf cmd.eg
         
-        case "${a}" in
-        "--unmerge"*|"-P"*|"--prune"*|"--depclean"*)
-            cl; eb2 "* "; eg2 "emerge "; er "${a}"
-            mrg ${a}
-        ;;
-        *)
-            mrgp "ml"
-            if [ -n "$(grep -i '^\[ebuild' data.tmp)" ]; then
-                make_list
-                fetch &>/dev/null &
-                compile
-            fi
-        ;;
-        esac
+        if [ -n "$(grep -i '^\[ebuild' data.tmp)" ]; then
+            make_list
+            fetch &>/dev/null &
+            compile
+        fi
     elif [ "${1}" == "sync" ]; then
         [[ -e "/usr/portage/metadata/timestamp.chk" ]] && rm -rf /usr/portage/metadata/timestamp.chk &>/dev/null
         CONFIG_PROTECT_MASK="/etc" emerge --quiet --sync &>/dev/null
@@ -570,7 +553,7 @@ k_grub() {
 
     fl "/boot/grub/device.map" "0" "0"
 
-    [[ -e "${trg_file}" ]] && echo "$(grep -v fd[0-9] ${trg_file})" > ${trg_file}
+    [[ -e "${trg_file}" ]] && sed -i "/.*fd[0-9].*/d" ${trg_file}
     
     fl "ginst.eg" "0" "d"
     
@@ -1491,7 +1474,7 @@ check() {
     case ${lc_e} in
     [1-9]|[1-9][0-9])
         new_line="$(grep emerge ${profile} | cut -c 8- | sed '{:q;N;s/\n/ /g;t q}')"
-        echo "$(grep -v emerge ${profile})" > ${profile}
+        sed -i "/.*emerge.*/d" ${profile}
         echo "emerge ${new_line}" >> ${profile}
     ;;
     esac
@@ -2225,21 +2208,25 @@ inside() {
     
     cf '#cpu'
     cf 'USE="${USE} '${available_cpu_flags}'"'
+    cf ''
     cf '#file systems'
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
+    cf ''
     cf '#base system'
-    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit 
-    css dbus gdbm gnutls kmod lzo nptl pam policykit profile rar readline sqlite 
-    sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit '
+    cf '    css dbus gdbm gnutls kmod lzo nptl pam policykit profile rar readline sqlite '
+    cf '    sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf ''
     cf '#disabled'
-    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc 
-    -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection 
-    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono 
-    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs 
-    -xscreensaver -zemberek"'
+    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc '
+    cf '    -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection '
+    cf '    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono '
+    cf '    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs '
+    cf '    -xscreensaver -zemberek"'
+    cf ''
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
-
+    cf ''
     cf '#laptop'
     
     case ${type} in
@@ -2251,42 +2238,51 @@ inside() {
     ;;
     esac
     
+    cf ''
+    cf '#internet'
+    cf 'USE="${USE} -aim -icq -imap -irc -jabber -msn -oscar -rss -slp -yahoo"'
+    cf ''
+    
     case ${setup} in
     normal)
         cf '#codecs'
-        cf 'USE="${USE} a52 aac avi dts dv encode ffmpeg flac gsm lame 
-        mad matroska mp3 mp4 mpeg musepack ogg openal quicktime real 
-        speex theora vorbis win32codecs x264 xvid"'
+        cf 'USE="${USE} a52 aac avi dts dv encode ffmpeg flac gsm lame '
+        cf '    mad matroska mp3 mp4 mpeg musepack ogg openal quicktime real '
+        cf '    speex theora vorbis win32codecs x264 xvid"'
+        cf ''
         cf '#multimedia'
-        cf 'USE="${USE} alsa audiofile cdda cddb cdr dri dvb dvd dvdr 
-        fam -jack ipod -mjpeg -mp3rtp musicbrainz network -pulseaudio 
-        sdl -v4l -v4l2 vcd vpx -wmf xine"'
-        cf '#internet'
-        cf 'USE="${USE} aim icq imap irc jabber msn rss slp yahoo"'
+        cf 'USE="${USE} alsa audiofile cdda cddb cdr dri dvb dvd dvdr '
+        cf '    fam -jack ipod -mjpeg -mp3rtp musicbrainz network -pulseaudio '
+        cf '    sdl -v4l -v4l2 vcd vpx -wmf xine"'
+        cf ''
         cf '#X'
         cf 'USE="${USE} cairo dga gif gtk opengl svg tiff X xinerama xpm"'
+        cf ''
         cf '#xfce'
-        cf 'USE="${USE} session startup-notification thunar xfce -gnome 
-        -kde -nautilus -qt3support -qt4"'
+        cf 'USE="${USE} session startup-notification thunar xfce -gnome '
+        cf '    -kde -nautilus -qt3support -qt4"'
     ;;
     basic)
         cf '#codecs'
-        cf 'USE="${USE} -a52 -aac -avi -dts -dv -encode -ffmpeg -flac 
-        -gsm -lame -mad -matroska -mp3 -mp4 -mpeg -musepack -ogg -openal 
-        -quicktime -real -speex -theora -vorbis -win32codecs -x264 -xvid"'
+        cf 'USE="${USE} -a52 -aac -avi -dts -dv -encode -ffmpeg -flac '
+        cf '    -gsm -lame -mad -matroska -mp3 -mp4 -mpeg -musepack -ogg -openal '
+        cf '    -quicktime -real -speex -theora -vorbis -win32codecs -x264 -xvid"'
+        cf ''
         cf '#multimedia'
-        cf 'USE="${USE} alsa -audiofile -cdda -cddb cdr dri -dvb dvd 
-        dvdr fam -jack -ipod -mjpeg -mp3rtp -musicbrainz network -pulseaudio 
-        sdl -v4l -v4l2 -vcd -vpx -wmf -xine"'
-        cf '#internet'
-        cf 'USE="${USE} -aim -icq -imap -irc -jabber -msn -rss -slp -yahoo"'
+        cf 'USE="${USE} alsa -audiofile -cdda -cddb cdr dri -dvb dvd '
+        cf '    dvdr fam -jack -ipod -mjpeg -mp3rtp -musicbrainz network -pulseaudio '
+        cf '    sdl -v4l -v4l2 -vcd -vpx -wmf -xine"'
+        cf ''
         cf '#X'
         cf 'USE="${USE} -cairo -dga -gif -gtk -opengl -svg -tiff -X -xinerama -xpm"'
+        cf ''
         cf '#no desktop environment'
-        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4 
-        -startup-notification -thunar -xfce"'
+        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4 '
+        cf '    -startup-notification -thunar -xfce"'
     ;;
     esac
+    
+    cf ''
     
     case ${arch} in
     amd64)
@@ -2388,7 +2384,7 @@ inside() {
     cf "kde-base/kdebase-startkde xinerama"
     cf "kde-base/kdenetwork-meta -ppp"
     cf "kde-base/kdm consolekit"
-    cf "kde-base/kopete -jingle msn yahoo"
+    cf "kde-base/kopete -jingle msn oscar ssl yahoo"
     cf "kde-base/konqueror branding java thumbnail"
     cf "kde-base/okular djvu ebook jpeg pdf tiff"
     cf "kde-base/plasma-workspace -python"
@@ -2806,8 +2802,7 @@ inside() {
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    inst "--unmerge dmidecode lafilefixer localepurge net-misc/ntp"
-    echo "$(grep -v dmidecode ${compiled} | grep -v lafilefixer | grep -v  localepurge)" > ${compiled}
+    umrg "dmidecode lafilefixer localepurge net-misc/ntp"
     k_check
     end
 }
