@@ -903,89 +903,6 @@ k_portage() {
     inst "--nodeps portage"
 }
 
-wm() {
-    inst "-N system"
-    k_x
-    
-    fl "/home/${username}/.fonts.conf" "b" "d"
-
-    cf '<?xml version="1.0" encoding="UTF-8"?>'
-    cf '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">'
-    cf '<fontconfig>'
-    cf '    <alias>'
-    cf '        <family>serif</family>'
-    cf '        <prefer>'
-    cf '            <family>DejaVu Serif</family>'
-    cf '            <family>Bitstream Vera Serif</family>'
-    cf '        </prefer>'
-    cf '    </alias>'
-    cf ''
-    cf '    <alias>'
-    cf '        <family>sans-serif</family>'
-    cf '        <prefer>'
-    cf '            <family>DejaVu Sans</family>'
-    cf '            <family>Bitstream Vera Sans</family>'
-    cf '            <family>Verdana</family>'
-    cf '            <family>Arial</family>'
-    cf '        </prefer>'
-    cf '    </alias>'
-    cf ''
-    cf '    <alias>'
-    cf '        <family>monospace</family>'
-    cf '        <prefer>'
-    cf '            <family>DejaVu Sans Mono</family>'
-    cf '            <family>Bitstream Vera Sans Mono</family>'
-    cf '        </prefer>'
-    cf '    </alias>'
-    cf ''
-    cf '    <match target="font">'
-    cf '        <edit name="rgba" mode="assign">'
-    cf '            <const>none</const>'
-    cf '        </edit>'
-    cf '        <edit name="autohint" mode="assign">'
-    cf '            <bool>true</bool>'
-    cf '        </edit>'
-    cf '        <edit name="antialias" mode="assign">'
-    cf '            <bool>true</bool>'
-    cf '        </edit>'
-    cf '        <edit name="hinting" mode="assign">'
-    cf '            <bool>true</bool>'
-    cf '        </edit>'
-    cf '        <edit name="hintstyle" mode="assign">'
-    cf '            <const>hintfull</const>'
-    cf '        </edit>'
-    cf '    </match>'
-    cf ''
-    cf '    <!-- Disable autohint for bold fonts -->'
-    cf '    <match target="font">'
-    cf '           <test name="weight" compare="more">'
-    cf '            <const>medium</const>'
-    cf '        </test>'
-    cf '           <edit name="autohint" mode="assign">'
-    cf '            <bool>false</bool>'
-    cf '        </edit>'
-    cf '    </match>'
-    cf ''
-    cf '    <!-- Reject bitmap fonts in favour of Truetype, Postscript, etc. -->'
-    cf '    <selectfont>'
-    cf '        <rejectfont>'
-    cf '            <pattern>'
-    cf '                <patelt name="scalable">'
-    cf '                    <bool>false</bool>'
-    cf '                </patelt>'
-    cf '            </pattern>'
-    cf '        </rejectfont>'
-    cf '    </selectfont>'
-    cf ''
-    cf '</fontconfig>'
-
-    for cfg in "10-autohint.conf" "10-sub-pixel-rgb.conf" "20-unhint-small-dejavu-sans-mono.conf" "20-unhint-small-dejavu-sans.conf" "20-unhint-small-dejavu-serif.conf" "25-unhint-nonlatin.conf" "57-dejavu-sans-mono.conf" "57-dejavu-sans.conf" "57-dejavu-serif.conf"
-    do
-        no=$(eselect fontconfig list | grep "${cfg}" | tr '[]' ' ' | awk '{print $1}')
-        eselect fontconfig enable "${no}" &>/dev/null
-    done
-}
-
 k_nm() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "NetworkManager"; eg "..."; sleep 0.5s; echo)
     inst "networkmanager nm-applet"
@@ -1020,6 +937,9 @@ k_alsa() {
 }
 
 k_x() {
+    step=$(echo; eb2 "* "; eg2 "Checking system"; eg "..."; echo)
+    inst "-N system"
+    
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Xorg server"; eg "..."; echo)
     inst "xorg-server"
     
@@ -1040,15 +960,13 @@ k_x() {
     ;;
     esac
     
+    cf "export GDK_USE_XFT=1"
+    cf "export QT_XFT=true"
+    cf ""
+    cf "#This line is necessary if you don't use a login manager to start Xfce"
+    cf "#exec $(which ck-launch-session) $(which dbus-launch) --exit-with-session xfce4-session"
+    
     k_xfce
-    
-    usermod -a -G plugdev ${username}
-    
-    session="Xfce4"
-    
-    fl "/etc/env.d/90xsession" "0" "d"
-    
-    avoid_dup 'XSESSION="'${session}'"'
     
     fl "/home/${username}/.gtkrc-2.0" "b" "d"
     
@@ -1084,7 +1002,6 @@ k_x() {
     fi
 
     hwsetup
-    usermod -a -G plugdev pulse &>/dev/null
     refresh
     
     echo; eb2 "* "; eg2 "Making adjustments for "; er "evdev "; echo
@@ -1294,6 +1211,84 @@ k_x() {
     fl "/etc/X11/xorg.conf" "b" "d"
     
     cp xorg.eg ${trg_file}
+    
+    fl "/home/${username}/.fonts.conf" "b" "d"
+
+    cf '<?xml version="1.0" encoding="UTF-8"?>'
+    cf '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">'
+    cf '<fontconfig>'
+    cf '    <alias>'
+    cf '        <family>serif</family>'
+    cf '        <prefer>'
+    cf '            <family>DejaVu Serif</family>'
+    cf '            <family>Bitstream Vera Serif</family>'
+    cf '        </prefer>'
+    cf '    </alias>'
+    cf ''
+    cf '    <alias>'
+    cf '        <family>sans-serif</family>'
+    cf '        <prefer>'
+    cf '            <family>DejaVu Sans</family>'
+    cf '            <family>Bitstream Vera Sans</family>'
+    cf '            <family>Verdana</family>'
+    cf '            <family>Arial</family>'
+    cf '        </prefer>'
+    cf '    </alias>'
+    cf ''
+    cf '    <alias>'
+    cf '        <family>monospace</family>'
+    cf '        <prefer>'
+    cf '            <family>DejaVu Sans Mono</family>'
+    cf '            <family>Bitstream Vera Sans Mono</family>'
+    cf '        </prefer>'
+    cf '    </alias>'
+    cf ''
+    cf '    <match target="font">'
+    cf '        <edit name="rgba" mode="assign">'
+    cf '            <const>none</const>'
+    cf '        </edit>'
+    cf '        <edit name="autohint" mode="assign">'
+    cf '            <bool>true</bool>'
+    cf '        </edit>'
+    cf '        <edit name="antialias" mode="assign">'
+    cf '            <bool>true</bool>'
+    cf '        </edit>'
+    cf '        <edit name="hinting" mode="assign">'
+    cf '            <bool>true</bool>'
+    cf '        </edit>'
+    cf '        <edit name="hintstyle" mode="assign">'
+    cf '            <const>hintfull</const>'
+    cf '        </edit>'
+    cf '    </match>'
+    cf ''
+    cf '    <!-- Disable autohint for bold fonts -->'
+    cf '    <match target="font">'
+    cf '           <test name="weight" compare="more">'
+    cf '            <const>medium</const>'
+    cf '        </test>'
+    cf '           <edit name="autohint" mode="assign">'
+    cf '            <bool>false</bool>'
+    cf '        </edit>'
+    cf '    </match>'
+    cf ''
+    cf '    <!-- Reject bitmap fonts in favour of Truetype, Postscript, etc. -->'
+    cf '    <selectfont>'
+    cf '        <rejectfont>'
+    cf '            <pattern>'
+    cf '                <patelt name="scalable">'
+    cf '                    <bool>false</bool>'
+    cf '                </patelt>'
+    cf '            </pattern>'
+    cf '        </rejectfont>'
+    cf '    </selectfont>'
+    cf ''
+    cf '</fontconfig>'
+
+    for cfg in "10-autohint.conf" "10-sub-pixel-rgb.conf" "20-unhint-small-dejavu-sans-mono.conf" "20-unhint-small-dejavu-sans.conf" "20-unhint-small-dejavu-serif.conf" "25-unhint-nonlatin.conf" "57-dejavu-sans-mono.conf" "57-dejavu-sans.conf" "57-dejavu-serif.conf"
+    do
+        no=$(eselect fontconfig list | grep "${cfg}" | tr '[]' ' ' | awk '{print $1}')
+        eselect fontconfig enable "${no}" &>/dev/null
+    done
 }
 
 k_gdm() {
@@ -1328,6 +1323,15 @@ k_gdm() {
     cf "Session=${session_name2}"
     
     chown -fP ${username} ${trg_file}
+    
+    rc-update add xdm default &>/dev/null
+
+    fl "/etc/conf.d/xdm" "0" "0"
+    
+    avoid_dup 'DISPLAYMANAGER="gdm"'
+    avoid_dup 'NEEDS_HALD="no"'
+    
+    chown -fP ${username} ${trg_file}
 }
 
 k_xfce() {
@@ -1345,26 +1349,19 @@ k_xfce() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Thunar"; eg "..."; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
     
-    fl "/home/${username}/.xinitrc" "0" "0"
-    
-    cf "export GDK_USE_XFT=1"
-    cf "export QT_XFT=true"
-    cf "exec $(which ck-launch-session) $(which dbus-launch) --exit-with-session xfce4-session"
-    
     if [ ! -d "/home/${username}/.config/xfce4/panel" ]; then
         mkdir -p /home/${username}/.config/xfce4/panel
     fi
     
     cp /etc/xdg/xfce4/panel/default.xml /home/${username}/.config/xfce4/panel/
     
-    rc-update add xdm default &>/dev/null
-
-    fl "/etc/conf.d/xdm" "0" "0"
+    usermod -a -G plugdev ${username}
     
-    avoid_dup 'DISPLAYMANAGER="gdm"'
-    avoid_dup 'NEEDS_HALD="no"'
+    session="Xfce4"
     
-    chown -fP ${username} ${trg_file}
+    fl "/etc/env.d/90xsession" "0" "d"
+    
+    avoid_dup 'XSESSION="'${session}'"'
 }
 
 k_system() {
@@ -2524,7 +2521,7 @@ inside() {
     esac
     
     k_needed
-    [[ "${setup}" == "normal" ]] && { wm; k_nm; k_alsa; }
+    [[ "${setup}" == "normal" ]] && { k_x; k_nm; k_alsa; }
     
     echo; eb2 "* "; eg "Creating/Updating necessary configuration files..."; sleep 1s
     refresh

@@ -80,7 +80,7 @@ for you. Happy compiling!
     --- Emerge and configure Gdm Login Manager
     --- Configure evdev settings
     --- Emerge NetworkManager
-    --- Emerge Pulseaudio
+    --- Emerge and configure Alsa
 14- Create/update configuration files (localtime, keymaps, hostname, etc)
 15- Change locale based on keymap
 16- Change root password and create user
