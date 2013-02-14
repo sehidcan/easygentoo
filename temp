@@ -172,7 +172,7 @@ mirror_check() {
         sleep 1s
     done
     
-    [[ "$(grep 'mirror=' ${vl})" ]] && sed -i '/^mirror=/d' ${vl}
+    [[ "$(grep 'mirror=' ${vl})" ]] && sed -i '\!^mirror=!d' ${vl}
     
     for mrr in ${mirrorlist}
     do
@@ -1877,7 +1877,7 @@ get_tar() {
     ;;
     esac
     
-    sed -i -e '/^#/d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '/^$/d' ${lt}
+    sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
     
     ext=".tar.bz2"
     tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
@@ -2812,7 +2812,7 @@ end() {
 
     no_dup 'FEATURES="-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox"'
     
-    sed -i -e '/^FETCHCOMMAND=.*$/d' -e '/^RESUMECOMMAND=.*$/d' ${trg_file}
+    sed -i -e '\!^FETCHCOMMAND=.*$!d' -e '\!^RESUMECOMMAND=.*$!d' ${trg_file}
     
     case ${keymap} in
     trq|trf)
