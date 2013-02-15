@@ -3,14 +3,13 @@
 # ----------------------------- #
 #         Easy Gentoo           #
 # ----------------------------- #
-#                               #
 # a small Gentoo install script #
 #              by               #
 #        Şehidcan Erdim         #
 # sehidcan (at) gmail (dot) com #
 #################################
 
-normal=$'\e[0m'; red=$'\e[31;01m'; green=$'\e[32;01m'; yellow=$'\e[33;01m'; blue=$'\e[34;01m'; pink=$'\e[35;01m'; cyan=$'\e[36;01m'; white=$'\e[39;01m'
+normal=$'\e[0m'; red=$'\e[31;01m'; green=$'\e[32;01m'; yellow=$'\e[33;01m'; blue=$'\e[34;01m'; pink=$'\e[35;01m'; cyan=$'\e[36;01m'; white=$'\e[37;01m'
 
 en() { echo "${normal}${*}${normal}";} ; er() { echo "${red}${*}${normal}";} ; eg() { echo "${green}${*}${normal}";} ; ey() { echo "${yellow}${*}${normal}";}
 eb() { echo "${blue}${*}${normal}";} ; ep() { echo "${pink}${*}${normal}";} ; ec() { echo "${cyan}${*}${normal}";} ; ew() { echo "${white}${*}${normal}";}
@@ -48,6 +47,18 @@ fl() {
         [[ "${3}" == "d" ]] && rm -rf "${trg_file}"
     else
         touch "${trg_file}"
+    fi
+}
+
+avoid_dup() {
+    if [ -n "${@}" ] && [ -n "${trg_file}" ]; then
+        allofit="${@}"
+        nameonly="$(echo ${allofit} | cut -d'=' -f1)"
+        if [ -n "$(grep ^${nameonly} ${trg_file})" ];then
+            sed -i s:"^${nameonly}=.*":"${allofit}": ${trg_file}
+        else
+            echo "${allofit}" >> ${trg_file}
+        fi
     fi
 }
 
@@ -160,7 +171,7 @@ mirror_check() {
         sleep 1s
     done
     
-    [[ "$(grep 'mirror=' ${vl})" ]] && sed -i '/^mirror=/d' ${vl}
+    [[ "$(grep 'mirror=' ${vl})" ]] && sed -i '\!^mirror=!d' ${vl}
     
     for mrr in ${mirrorlist}
     do
@@ -191,27 +202,9 @@ mrg() {
     CONFIG_PROTECT_MASK="/etc" emerge --quiet-build $@ 2> /dev/null
 }
 
-mrgs() {
-    MAKEOPTS="-j1" CONFIG_PROTECT_MASK="/etc" emerge --quiet-build $@ 2> /dev/null
-}
-
-mrgf() {
-    CONFIG_PROTECT_MASK="/etc" emerge --quiet-build -f --nodeps $@ 2> /dev/null
-}
-
-mrgp() {
-    case ${1} in
-    cf)
-        echo "emerge -pv ${a} 2>&1 | grep -v '^\['" > mrgp.tmp
-        sh mrgp.tmp > data.tmp
-        rm -rf mrgp.tmp
-    ;;
-    ml)
-        echo "emerge -pv ${a} 2>&1 | grep '^\['" > mrgp.tmp
-        sh mrgp.tmp > data.tmp
-        rm -rf mrgp.tmp
-    ;;
-    esac
+umrg() {
+    cl; eb2 "* "; eg2 "emerge "; er "--unmerge ${@}"
+    CONFIG_PROTECT_MASK="/etc" emerge --quiet-build --unmerge $@ 2> /dev/null && { sed -i "/.*\/$@.*/d" ${compiled}; sed -i "/.*\/$@.*/d" pkg.lst; }
 }
 
 get_files() {
@@ -261,7 +254,7 @@ inst() {
                 continue
             ;;
             *)
-                echo "$(grep -v ${p_line} ${trg_file})" > ${trg_file}
+                sed -i "\!.*${p_line}.*!d" ${trg_file}
             ;;
             esac
         done < ${trg_file}
@@ -295,7 +288,8 @@ inst() {
                     next="no"
                     while [ "${next}" != "yes" ]
                     do
-                        mrgf ${pkg}
+                        CONFIG_PROTECT_MASK="/etc" emerge --quiet-build -f --nodeps ${pkg} 2> /dev/null
+                        
                         case $? in
                         0)
                             cf "${pkg}"; next="yes"
@@ -312,7 +306,7 @@ inst() {
                 ;;
                 esac
             
-                echo "$(grep -v ${pkg} pkg_dup.lst)" > pkg_dup.lst
+                sed -i "\!.*${pkg}.*!d" pkg_dup.lst
             fi
         done
     }
@@ -321,19 +315,19 @@ inst() {
         fl "pkg.lst" "0" "0"
         while true
         do
-            read -r package < "${trg_file}"
+            read -r package < ${trg_file}
             
             if [ -z "${package}" ]; then
                 break
             else
-                if [ -e "pkg.lst" ]; then
+                if [ -e "${trg_file}" ]; then
                     cl
                     source "$(pwd)/merge.eg"
                     
                     [[ -n "${step}" ]] && echo "${step}"
                     
                     echo; ey2 "  Command: "; eg2 "  emerge "; er "${a}"
-                    echo; eg2 "  Next packages "; ew2 "($(wc -l < pkg.lst) packages total)"; eg ":"
+                    echo; eg2 "  Next packages "; ew2 "($(wc -l < ${trg_file}) packages total)"; eg ":"
                     
                     p_numb="1"
                     while read p_input
@@ -351,7 +345,7 @@ inst() {
                         ;;
                         esac
                         ((p_numb++))
-                    done < pkg.lst
+                    done < ${trg_file}
                     
                     echo
                     
@@ -370,6 +364,12 @@ inst() {
                 
                 shut
                 
+                case ${package} in
+                *sys-apps/kmod-*)
+                    umrg "module-init-tools"
+                ;;
+                esac
+                
                 if [ -e "sys.eg" ]; then
                     mrg -e --oneshot --nodeps ${package}
                 else
@@ -382,7 +382,8 @@ inst() {
                 
                 case $? in
                 0)
-                    echo "$(grep -v ${package} ${trg_file})" > ${trg_file}
+                    sed -i "\!.*${package}.*!d" ${trg_file}
+                    
                     if [ -z "$(grep $(echo ${package} | cut -c 2-) ${compiled})" ]; then
                         echo "${package}" | cut -c 2- >> ${compiled}
                     fi
@@ -417,21 +418,14 @@ inst() {
         cf "a=\"${1}\""
         
         source "$(pwd)/merge.eg"
+        echo "emerge -pv ${a} 2>&1 | grep '^\['" > cmd.eg
+        sh cmd.eg > data.tmp; rm -rf cmd.eg
         
-        case "${a}" in
-        "--unmerge"*|"-P"*|"--prune"*|"--depclean"*)
-            cl; eb2 "* "; eg2 "emerge "; er "${a}"
-            mrg ${a}
-        ;;
-        *)
-            mrgp "ml"
-            if [ -n "$(grep -i '^\[ebuild' data.tmp)" ]; then
-                make_list
-                fetch &>/dev/null &
-                compile
-            fi
-        ;;
-        esac
+        if [ -n "$(grep -i '^\[ebuild' data.tmp)" ]; then
+            make_list
+            fetch &>/dev/null &
+            compile
+        fi
     elif [ "${1}" == "sync" ]; then
         [[ -e "/usr/portage/metadata/timestamp.chk" ]] && rm -rf /usr/portage/metadata/timestamp.chk &>/dev/null
         CONFIG_PROTECT_MASK="/etc" emerge --quiet --sync &>/dev/null
@@ -556,9 +550,7 @@ k_grub() {
     
     [[ -n "${boot_part}" ]] && cp /proc/mounts /etc/mtab || grep -v rootfs /proc/mounts > /etc/mtab
 
-    fl "/boot/grub/device.map" "0" "0"
-
-    [[ -e "${trg_file}" ]] && echo "$(grep -v fd[0-9] ${trg_file})" > ${trg_file}
+    [[ -e "/boot/grub/device.map" ]] && sed -i "\!.*fd[0-9].*!d" /boot/grub/device.map
     
     fl "ginst.eg" "0" "d"
     
@@ -736,13 +728,6 @@ k_kernel() {
 
     module="${audio} ${cam} ${ether_10_100} ${ether_1000} ${ether_10000} ${video}"
     
-    all="${in} ${module} ${out}"
-
-    for cv in ${all}
-    do
-        echo "$(grep -v ${cv} easygentoo.config)" > easygentoo.config
-    done
-
     fl "easygentoo.config" "0" "0"
     
     for cv in ${in}
@@ -790,7 +775,7 @@ k_kernel() {
         ;;
         esac
         
-        cf "${cv}=${value}"
+        avoid_dup ${cv}'='${value}
     done
 
     for cv in ${module}
@@ -813,13 +798,13 @@ k_kernel() {
         ;;
         esac
         
-        cf "${cv}=${value}"
+        avoid_dup ${cv}'='${value}
     done
 
     for cv in ${out}
     do
         value="n"
-        cf "${cv}=${value}"
+        avoid_dup ${cv}'='${value}
     done
 
     [[ ! -d "/etc/kernels" ]] && mkdir -p /etc/kernels
@@ -917,89 +902,6 @@ k_portage() {
     inst "--nodeps portage"
 }
 
-wm() {
-    inst "-N system"
-    k_x
-    
-    fl "/home/${username}/.fonts.conf" "b" "d"
-
-    cf '<?xml version="1.0" encoding="UTF-8"?>'
-    cf '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">'
-    cf '<fontconfig>'
-    cf '    <alias>'
-    cf '        <family>serif</family>'
-    cf '        <prefer>'
-    cf '            <family>DejaVu Serif</family>'
-    cf '            <family>Bitstream Vera Serif</family>'
-    cf '        </prefer>'
-    cf '    </alias>'
-    cf ''
-    cf '    <alias>'
-    cf '        <family>sans-serif</family>'
-    cf '        <prefer>'
-    cf '            <family>DejaVu Sans</family>'
-    cf '            <family>Bitstream Vera Sans</family>'
-    cf '            <family>Verdana</family>'
-    cf '            <family>Arial</family>'
-    cf '        </prefer>'
-    cf '    </alias>'
-    cf ''
-    cf '    <alias>'
-    cf '        <family>monospace</family>'
-    cf '        <prefer>'
-    cf '            <family>DejaVu Sans Mono</family>'
-    cf '            <family>Bitstream Vera Sans Mono</family>'
-    cf '        </prefer>'
-    cf '    </alias>'
-    cf ''
-    cf '    <match target="font">'
-    cf '        <edit name="rgba" mode="assign">'
-    cf '            <const>none</const>'
-    cf '        </edit>'
-    cf '        <edit name="autohint" mode="assign">'
-    cf '            <bool>true</bool>'
-    cf '        </edit>'
-    cf '        <edit name="antialias" mode="assign">'
-    cf '            <bool>true</bool>'
-    cf '        </edit>'
-    cf '        <edit name="hinting" mode="assign">'
-    cf '            <bool>true</bool>'
-    cf '        </edit>'
-    cf '        <edit name="hintstyle" mode="assign">'
-    cf '            <const>hintfull</const>'
-    cf '        </edit>'
-    cf '    </match>'
-    cf ''
-    cf '    <!-- Disable autohint for bold fonts -->'
-    cf '    <match target="font">'
-    cf '           <test name="weight" compare="more">'
-    cf '            <const>medium</const>'
-    cf '        </test>'
-    cf '           <edit name="autohint" mode="assign">'
-    cf '            <bool>false</bool>'
-    cf '        </edit>'
-    cf '    </match>'
-    cf ''
-    cf '    <!-- Reject bitmap fonts in favour of Truetype, Postscript, etc. -->'
-    cf '    <selectfont>'
-    cf '        <rejectfont>'
-    cf '            <pattern>'
-    cf '                <patelt name="scalable">'
-    cf '                    <bool>false</bool>'
-    cf '                </patelt>'
-    cf '            </pattern>'
-    cf '        </rejectfont>'
-    cf '    </selectfont>'
-    cf ''
-    cf '</fontconfig>'
-
-    for cfg in "10-autohint.conf" "10-sub-pixel-rgb.conf" "20-unhint-small-dejavu-sans-mono.conf" "20-unhint-small-dejavu-sans.conf" "20-unhint-small-dejavu-serif.conf" "25-unhint-nonlatin.conf" "57-dejavu-sans-mono.conf" "57-dejavu-sans.conf" "57-dejavu-serif.conf"
-    do
-        no=$(eselect fontconfig list | grep "${cfg}" | tr '[]' ' ' | awk '{print $1}')
-        eselect fontconfig enable "${no}" &>/dev/null
-    done
-}
-
 k_nm() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "NetworkManager"; eg "..."; sleep 0.5s; echo)
     inst "networkmanager nm-applet"
@@ -1021,9 +923,22 @@ k_alsa() {
         echo "pcm.!default { type hw card ${sound_card_guess} }" > /etc/asound.conf
         echo "ctl.!default { type hw card ${sound_card_guess} }" >> /etc/asound.conf
     fi
+    
+    fl "/etc/conf.d/alsasound" "0" "0"
+    avoid_dup 'RESTORE_ON_START="yes"'
+    avoid_dup 'SAVE_ON_STOP="yes"'
+    avoid_dup 'LOAD_ON_START="yes"'
+    
+    amixer set Master unmute
+    amixer set PCM unmute
+    
+    alsactl -f /var/lib/alsa/asound.state store
 }
 
 k_x() {
+    step=$(echo; eb2 "* "; eg2 "Checking system"; eg "..."; echo)
+    inst "-N system"
+    
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Xorg server"; eg "..."; echo)
     inst "xorg-server"
     
@@ -1044,15 +959,13 @@ k_x() {
     ;;
     esac
     
+    cf "export GDK_USE_XFT=1"
+    cf "export QT_XFT=true"
+    cf ""
+    cf "#This line is necessary if you don't use a login manager to start Xfce"
+    cf "#exec $(which ck-launch-session) $(which dbus-launch) --exit-with-session xfce4-session"
+    
     k_xfce
-    
-    usermod -a -G plugdev ${username}
-    
-    session="Xfce4"
-    
-    fl "/etc/env.d/90xsession" "0" "d"
-    
-    cf "XSESSION=\"${session}\""
     
     fl "/home/${username}/.gtkrc-2.0" "b" "d"
     
@@ -1088,7 +1001,6 @@ k_x() {
     fi
 
     hwsetup
-    usermod -a -G plugdev pulse &>/dev/null
     refresh
     
     echo; eb2 "* "; eg2 "Making adjustments for "; er "evdev "; echo
@@ -1298,6 +1210,84 @@ k_x() {
     fl "/etc/X11/xorg.conf" "b" "d"
     
     cp xorg.eg ${trg_file}
+    
+    fl "/home/${username}/.fonts.conf" "b" "d"
+
+    cf '<?xml version="1.0" encoding="UTF-8"?>'
+    cf '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">'
+    cf '<fontconfig>'
+    cf '    <alias>'
+    cf '        <family>serif</family>'
+    cf '        <prefer>'
+    cf '            <family>DejaVu Serif</family>'
+    cf '            <family>Bitstream Vera Serif</family>'
+    cf '        </prefer>'
+    cf '    </alias>'
+    cf ''
+    cf '    <alias>'
+    cf '        <family>sans-serif</family>'
+    cf '        <prefer>'
+    cf '            <family>DejaVu Sans</family>'
+    cf '            <family>Bitstream Vera Sans</family>'
+    cf '            <family>Verdana</family>'
+    cf '            <family>Arial</family>'
+    cf '        </prefer>'
+    cf '    </alias>'
+    cf ''
+    cf '    <alias>'
+    cf '        <family>monospace</family>'
+    cf '        <prefer>'
+    cf '            <family>DejaVu Sans Mono</family>'
+    cf '            <family>Bitstream Vera Sans Mono</family>'
+    cf '        </prefer>'
+    cf '    </alias>'
+    cf ''
+    cf '    <match target="font">'
+    cf '        <edit name="rgba" mode="assign">'
+    cf '            <const>none</const>'
+    cf '        </edit>'
+    cf '        <edit name="autohint" mode="assign">'
+    cf '            <bool>true</bool>'
+    cf '        </edit>'
+    cf '        <edit name="antialias" mode="assign">'
+    cf '            <bool>true</bool>'
+    cf '        </edit>'
+    cf '        <edit name="hinting" mode="assign">'
+    cf '            <bool>true</bool>'
+    cf '        </edit>'
+    cf '        <edit name="hintstyle" mode="assign">'
+    cf '            <const>hintfull</const>'
+    cf '        </edit>'
+    cf '    </match>'
+    cf ''
+    cf '    <!-- Disable autohint for bold fonts -->'
+    cf '    <match target="font">'
+    cf '           <test name="weight" compare="more">'
+    cf '            <const>medium</const>'
+    cf '        </test>'
+    cf '           <edit name="autohint" mode="assign">'
+    cf '            <bool>false</bool>'
+    cf '        </edit>'
+    cf '    </match>'
+    cf ''
+    cf '    <!-- Reject bitmap fonts in favour of Truetype, Postscript, etc. -->'
+    cf '    <selectfont>'
+    cf '        <rejectfont>'
+    cf '            <pattern>'
+    cf '                <patelt name="scalable">'
+    cf '                    <bool>false</bool>'
+    cf '                </patelt>'
+    cf '            </pattern>'
+    cf '        </rejectfont>'
+    cf '    </selectfont>'
+    cf ''
+    cf '</fontconfig>'
+
+    for cfg in "10-autohint.conf" "10-sub-pixel-rgb.conf" "20-unhint-small-dejavu-sans-mono.conf" "20-unhint-small-dejavu-sans.conf" "20-unhint-small-dejavu-serif.conf" "25-unhint-nonlatin.conf" "57-dejavu-sans-mono.conf" "57-dejavu-sans.conf" "57-dejavu-serif.conf"
+    do
+        no=$(eselect fontconfig list | grep "${cfg}" | tr '[]' ' ' | awk '{print $1}')
+        eselect fontconfig enable "${no}" &>/dev/null
+    done
 }
 
 k_gdm() {
@@ -1332,11 +1322,20 @@ k_gdm() {
     cf "Session=${session_name2}"
     
     chown -fP ${username} ${trg_file}
+    
+    rc-update add xdm default &>/dev/null
+
+    fl "/etc/conf.d/xdm" "0" "0"
+    
+    avoid_dup 'DISPLAYMANAGER="gdm"'
+    avoid_dup 'NEEDS_HALD="no"'
+    
+    chown -fP ${username} ${trg_file}
 }
 
 k_xfce() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Xfce"; eg " desktop environment..."; sleep 0.5s; echo)
-    inst "xfwm4 xfce4-notifyd xfce4-panel xfce4-session xfce4-settings xfdesktop"
+    inst "xfce4-meta xfce4-notifyd"
     step=$(echo; eb2 "* "; eg "Emerging other Xfce packages..."; sleep 0.5s; echo)
     inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     
@@ -1349,26 +1348,19 @@ k_xfce() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Thunar"; eg "..."; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
     
-    fl "/home/${username}/.xinitrc" "0" "0"
-    
-    cf "export GDK_USE_XFT=1"
-    cf "export QT_XFT=true"
-    cf "exec $(which ck-launch-session) $(which dbus-launch) --exit-with-session xfce4-session"
-    
     if [ ! -d "/home/${username}/.config/xfce4/panel" ]; then
         mkdir -p /home/${username}/.config/xfce4/panel
     fi
     
     cp /etc/xdg/xfce4/panel/default.xml /home/${username}/.config/xfce4/panel/
     
-    rc-update add xdm default &>/dev/null
-
-    fl "/etc/conf.d/xdm" "0" "0"
+    usermod -a -G plugdev ${username}
     
-    sed -i s:"^DISPLAYMANAGER=.*":"DISPLAYMANAGER=\"gdm\"": ${trg_file}
-    cf "NEEDS_HALD=\"no\""
+    session="Xfce4"
     
-    chown -fP ${username} ${trg_file}
+    fl "/etc/env.d/90xsession" "0" "d"
+    
+    avoid_dup 'XSESSION="'${session}'"'
 }
 
 k_system() {
@@ -1414,11 +1406,11 @@ refresh() {
 }
 
 lff() {
-    which lafilefixer &>/dev/null && { echo; eb2 "* "; eg "lafilefixer --justfixit"; echo; lafilefixer --justfixit | grep -v "skipping"; }
+    which lafilefixer &>/dev/null && { echo; eb2 "* "; eg "lafilefixer --justfixit"; echo; lafilefixer --justfixit; }
 }
 
 rdr() {
-    which revdep-rebuild &>/dev/null && { echo; eb2 "* "; eg "revdep-rebuild -q"; echo; revdep-rebuild -q; }
+    which revdep-rebuild &>/dev/null && { echo; eb2 "* "; eg "revdep-rebuild"; echo; revdep-rebuild; }
 }
 
 vlist() {
@@ -1474,7 +1466,7 @@ check() {
     case ${lc_e} in
     [1-9]|[1-9][0-9])
         new_line="$(grep emerge ${profile} | cut -c 8- | sed '{:q;N;s/\n/ /g;t q}')"
-        echo "$(grep -v emerge ${profile})" > ${profile}
+        sed -i "\!.*emerge.*!d" ${profile}
         echo "emerge ${new_line}" >> ${profile}
     ;;
     esac
@@ -1783,9 +1775,49 @@ prepare() {
         else
             grep "^${s} " ${profile} > p.tmp
             
+            value="$(awk '{print $2}' p.tmp)"
+            
             case ${s} in
+            arch)
+                case ${value} in
+                i686|amd64)
+                    e="x"
+                ;;
+                32|32bit|"32 bit")
+                    value="i686"
+                ;;
+                64|64bit|"64 bit")
+                    value="amd64"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
+            blimit)
+                case ${value} in
+                [0-9] | [0-9][0-9] | [0-9][0-9][0-9])
+                    e="x"
+                ;;
+                [0-9][0-9][0-9][0-9] | [0-9][0-9][0-9][0-9][0-9])
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
+            grub)
+                case ${value} in
+                [s:h]d[a-z] | [s:h]d[a-z][1-9] | [s:h]d[a-z][1-9][0-9] | [s:h]d[a-z][1-9][0-9][0-9])
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
             keymap)
-                value="$(awk '{print $2}' p.tmp)"
                 case ${value} in
                 trq|trf|us)
                     e="x"
@@ -1794,12 +1826,19 @@ prepare() {
                     value="trq"
                 ;;
                 *)
-                    value="us"
+                    default_value "${s}"
                 ;;
                 esac
             ;;
-            *)
-                value="$(awk '{print $2}' p.tmp)"
+            setup)
+                case ${value} in
+                basic|normal)
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
             ;;
             esac
         fi
@@ -1881,7 +1920,7 @@ get_tar() {
     ;;
     esac
     
-    sed -i -e '/^#/d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '/^$/d' ${lt}
+    sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
     
     ext=".tar.bz2"
     tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
@@ -2058,9 +2097,9 @@ inside() {
     echo; eg "  !!--Chroot--!!"
     
     fl "/etc/etc-update.conf" "0" "0"
-        
-    sed -i s:"^rm_opts=.*":"rm_opts=\"\"": ${trg_file}
-    sed -i s:"^cp_opts=.*":"cp_opts=\"\"": ${trg_file}
+    
+    avoid_dup 'rm_opts=""'
+    avoid_dup 'cp_opts=""'
 
     refresh
     
@@ -2125,11 +2164,8 @@ inside() {
     cf 'GENTOO_MIRRORS="'${mirrorlist}'"'
     cf 'RSYNC="rsync://rsync2.us.gentoo.org rsync://rsync3.us.gentoo.org rsync://rsync25.us.gentoo.org"'
         if [ "${blimit}" -gt "0" ]; then
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-        else
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+            cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
+            cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
     cf ''
@@ -2211,21 +2247,25 @@ inside() {
     
     cf '#cpu'
     cf 'USE="${USE} '${available_cpu_flags}'"'
+    cf ''
     cf '#file systems'
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
+    cf ''
     cf '#base system'
-    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit 
-    css dbus gdbm gnutls lzo nptl pam policykit profile rar readline sqlite sqlite3 
-    symlink truetype udev unicode usb vdpau zlib"'
+    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit '
+    cf '    css dbus -gdbm gnutls kmod lzo nptl pam policykit profile rar readline sqlite '
+    cf '    sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf ''
     cf '#disabled'
-    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc 
-    -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection 
-    -ipv6 -java -joystick -kdeprefix -kerberos -kmod -ldap -lm_sensors -minimal 
-    -mono -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs 
-    -xscreensaver -zemberek"'
+    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc '
+    cf '    -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection '
+    cf '    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono '
+    cf '    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs '
+    cf '    -xscreensaver -zemberek"'
+    cf ''
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
-
+    cf ''
     cf '#laptop'
     
     case ${type} in
@@ -2237,51 +2277,60 @@ inside() {
     ;;
     esac
     
+    cf ''
+    cf '#internet'
+    cf 'USE="${USE} -aim -icq -imap -irc -jabber -msn -oscar -rss -slp -yahoo"'
+    cf ''
+    
     case ${setup} in
     normal)
         cf '#codecs'
-        cf 'USE="${USE} a52 aac avi dts dv encode ffmpeg flac gsm lame 
-        mad matroska mp3 mp4 mpeg musepack ogg openal quicktime real 
-        speex theora vorbis win32codecs x264 xvid"'
+        cf 'USE="${USE} a52 aac avi dts dv encode ffmpeg flac gsm lame '
+        cf '    mad matroska mp3 mp4 mpeg musepack ogg openal quicktime real '
+        cf '    speex theora vorbis win32codecs x264 xvid"'
+        cf ''
         cf '#multimedia'
-        cf 'USE="${USE} alsa audiofile cdda cddb cdr dri dvb dvd dvdr 
-        fam -jack ipod -mjpeg -mp3rtp musicbrainz network -pulseaudio 
-        sdl -v4l -v4l2 vcd vpx -wmf xine"'
-        cf '#internet'
-        cf 'USE="${USE} aim icq imap irc jabber msn rss slp yahoo"'
+        cf 'USE="${USE} alsa audiofile cdda cddb cdr dri dvb dvd dvdr '
+        cf '    fam -jack ipod -mjpeg -mp3rtp -musicbrainz network -pulseaudio '
+        cf '    sdl -v4l -v4l2 vcd vpx -wmf -xine"'
+        cf ''
         cf '#X'
-        cf 'USE="${USE} cairo dga gif gtk opengl svg tiff X xinerama xpm"'
+        cf 'USE="${USE} cairo dga gif gtk opengl svg tiff X -xinerama xpm"'
+        cf ''
         cf '#xfce'
-        cf 'USE="${USE} session startup-notification thunar xfce -gnome 
-        -kde -nautilus -qt3support -qt4"'
+        cf 'USE="${USE} startup-notification thunar xfce -gnome -kde '
+        cf '    -nautilus -qt3support -qt4"'
     ;;
     basic)
         cf '#codecs'
-        cf 'USE="${USE} -a52 -aac -avi -dts -dv -encode -ffmpeg -flac 
-        -gsm -lame -mad -matroska -mp3 -mp4 -mpeg -musepack -ogg -openal 
-        -quicktime -real -speex -theora -vorbis -win32codecs -x264 -xvid"'
+        cf 'USE="${USE} -a52 -aac -avi -dts -dv -encode -ffmpeg -flac '
+        cf '    -gsm -lame -mad -matroska -mp3 -mp4 -mpeg -musepack -ogg -openal '
+        cf '    -quicktime -real -speex -theora -vorbis -win32codecs -x264 -xvid"'
+        cf ''
         cf '#multimedia'
-        cf 'USE="${USE} alsa -audiofile -cdda -cddb cdr dri -dvb dvd 
-        dvdr fam -jack -ipod -mjpeg -mp3rtp -musicbrainz network -pulseaudio 
-        sdl -v4l -v4l2 -vcd -vpx -wmf -xine"'
-        cf '#internet'
-        cf 'USE="${USE} -aim -icq -imap -irc -jabber -msn -rss -slp -yahoo"'
+        cf 'USE="${USE} alsa -audiofile -cdda -cddb cdr dri -dvb dvd '
+        cf '    dvdr fam -jack -ipod -mjpeg -mp3rtp -musicbrainz network -pulseaudio '
+        cf '    sdl -v4l -v4l2 -vcd -vpx -wmf -xine"'
+        cf ''
         cf '#X'
         cf 'USE="${USE} -cairo -dga -gif -gtk -opengl -svg -tiff -X -xinerama -xpm"'
+        cf ''
         cf '#no desktop environment'
-        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4 
-        -startup-notification -thunar -xfce"'
+        cf 'USE="${USE} -gnome -kde -nautilus -qt3support -qt4 '
+        cf '    -startup-notification -thunar -xfce"'
     ;;
     esac
+    
+    cf ''
     
     case ${arch} in
     amd64)
         cf '#64bit'
         cf 'USE="${USE} multilib"'
+        cf ''
     ;;
     esac
     
-    cf ''
     cf 'VIDEO_CARDS="vesa"'
     cf 'INPUT_DEVICES="evdev"'
         case ${keymap} in
@@ -2293,12 +2342,12 @@ inside() {
         ;;
         esac
     cf 'AUTOCLEAN="yes"'
-    cf 'CONFIG_PROTECT="/etc /etc/fstab /etc/hosts /etc/locale.gen 
-    /etc/localtime /etc/rc.conf /etc/sudoers /etc/sysctl.conf 
-    /etc/X11/xorg.conf.d /etc/portage/package.use /etc/conf.d/domainname 
-    /etc/conf.d/hostname /etc/conf.d/hwclock /etc/conf.d/keymaps 
-    /etc/conf.d/net /etc/modprobe.d/blacklist.conf /etc/portage/env 
-    /etc/X11/gdm /usr/share/config/kdm"'
+    cf 'CONFIG_PROTECT="/etc /etc/fstab /etc/hosts /etc/locale.gen '
+    cf '    /etc/localtime /etc/rc.conf /etc/sudoers /etc/sysctl.conf '
+    cf '    /etc/X11/xorg.conf.d /etc/portage/package.use /etc/conf.d/domainname '
+    cf '    /etc/conf.d/hostname /etc/conf.d/hwclock /etc/conf.d/keymaps '
+    cf '    /etc/conf.d/net /etc/modprobe.d/blacklist.conf /etc/portage/env '
+    cf '    /etc/X11/gdm /usr/share/config/kdm"'
     cf 'PORTDIR="/usr/portage"'
     cf 'PORTAGE_TMPDIR="/var/tmp"'
     cf 'PORTAGE_COMPRESS="bzip2"'
@@ -2310,11 +2359,8 @@ inside() {
     cf 'GENTOO_MIRRORS="'${mirrorlist}'"'
     cf 'RSYNC="rsync://rsync2.us.gentoo.org rsync://rsync3.us.gentoo.org rsync://rsync25.us.gentoo.org"'
         if [ "${blimit}" -gt "0" ]; then
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp --limit-rate='${blimit}'k -O \${DISTDIR}/\${FILE} \${URI}"'
-        else
-            cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
-            cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+            cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
+            cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
         if [ "${setup}" == "normal" ]; then
@@ -2377,7 +2423,7 @@ inside() {
     cf "kde-base/kdebase-startkde xinerama"
     cf "kde-base/kdenetwork-meta -ppp"
     cf "kde-base/kdm consolekit"
-    cf "kde-base/kopete -jingle msn yahoo"
+    cf "kde-base/kopete -jingle msn oscar ssl yahoo"
     cf "kde-base/konqueror branding java thumbnail"
     cf "kde-base/okular djvu ebook jpeg pdf tiff"
     cf "kde-base/plasma-workspace -python"
@@ -2521,7 +2567,7 @@ inside() {
     esac
     
     k_needed
-    [[ "${setup}" == "normal" ]] && { wm; k_nm; k_alsa; }
+    [[ "${setup}" == "normal" ]] && { k_x; k_nm; k_alsa; }
     
     echo; eb2 "* "; eg "Creating/Updating necessary configuration files..."; sleep 1s
     refresh
@@ -2549,12 +2595,13 @@ inside() {
             cp fstab.eg ${d}
         ;;
         /etc/hosts)
-            sed -i s:"^127.0.0.1.*":"127.0.0.1      ${hostname}.${domainname} ${hostname} gentoo": ${trg_file}
+            sed -i s:"^127.0.0.1.*":"127.0.0.1      ${hostname}.${domainname} ${hostname} gentoo": ${d}
         ;;
         /etc/locale.gen)
             case ${keymap} in
             trq|trf)
                 cf "tr_TR.UTF-8 UTF-8"
+                cf "tr_TR ISO-8859-9"
             ;;
             us)
                 cf "en_US.UTF-8 UTF-8"
@@ -2577,13 +2624,13 @@ inside() {
             esac
         ;;
         /etc/rc.conf)
-            sed -i 's:rc_hotplug=.*:rc_hotplug="!net.*":' ${trg_file}
-            sed -i 's:rc_logger=.*:rc_logger="NO":' ${trg_file}
-            sed -i 's:unicode=.*:unicode="YES":' ${trg_file}
-            sed -i 's:rc_sys=.*:rc_sys="":' ${trg_file}
-            sed -i 's:rc_tty_number=.*:rc_tty_number=12:' ${trg_file}
-            sed -i 's:dbus_enable=.*:dbus_enable="YES":' ${trg_file}
-            sed -i 's:hald_enable=.*:hald_enable="NO":' ${trg_file}
+            avoid_dup 'rc_hotplug="!net.*"'
+            avoid_dup 'rc_logger="NO"'
+            avoid_dup 'unicode="YES"'
+            avoid_dup 'rc_sys=""'
+            avoid_dup 'rc_tty_number=12'
+            avoid_dup 'dbus_enable="YES"'
+            avoid_dup 'hald_enable="NO"'
         ;;
         /etc/sysctl.conf)
             cf '## TCP SYN cookie protection'
@@ -2640,29 +2687,29 @@ inside() {
             sysctl -p &>/dev/null
         ;;
         /etc/conf.d/domainname)
-            cf 'DNSDOMAIN="'${domainname}'"'
-            cf 'NISDOMAIN="'${domainname}'"'
+            avoid_dup 'DNSDOMAIN="'${domainname}'"'
+            avoid_dup 'NISDOMAIN="'${domainname}'"'
         ;;
         /etc/conf.d/hostname)
-            sed -i s:".*hostname=.*":"hostname=\"${hostname}\"": ${trg_file}
+            avoid_dup 'hostname="'${hostname}'"'
         ;;
         /etc/conf.d/hwclock)
-            [[ -n "${windows}" ]] && sed -i s:"clock=.*":"clock=\"local\"": ${trg_file} || sed -i s:"clock=.*":"clock=\"UTC\"": ${trg_file}
-            sed -i s:"clock_systohc=.*":"clock_systohc=\"YES\"": ${trg_file}
+            [[ -n "${windows}" ]] && avoid_dup 'clock="local"' || avoid_dup 'clock="UTC"'
+            avoid_dup 'clock_systohc="YES"'
         ;;
         /etc/conf.d/keymaps)
-            sed -i s:".*keymap=.*":"keymap=\"-u ${keymap}\"": ${trg_file}
-            sed -i s:".*windowkeys=.*":"windowkeys=\"YES\"": ${trg_file}
+            avoid_dup 'windowkeys="YES"'
+            avoid_dup 'keymap="-u '${keymap}'"'
         ;;
         /etc/conf.d/net)
-            cf 'dns_domain_lo="gentoo.powered"'
+            avoid_dup 'dns_domain_lo="gentoo.powered"'
             
             if [ "${setup}" == "basic" ]; then
                 for adapter in ${adapters_found}
                 do
-                    cf 'config_'${adapter}'="dhcp"'
-                    cf 'dhcpcd_'${adapter}'="-t 10"'
-                    cf 'mtu_'${adapter}'="1492"'
+                    avoid_dup 'config_'${adapter}'="dhcp"'
+                    avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
+                    avoid_dup 'mtu_'${adapter}'="1492"'
                 done
             fi
         ;;
@@ -2722,12 +2769,14 @@ inside() {
     ;;
     esac
     
+    fl "/etc/conf.d/consolefont" "0" "0"
+    
     case ${keymap} in
     trq|trf)
-        [[ -e "/etc/conf.d/consolefont" ]] && sed -i 's:.*consolefont=.*:consolefont="iso09.16":' /etc/conf.d/consolefont || echo 'consolefont="iso09.16"' >> /etc/conf.d/consolefont
+        avoid_dup 'consolefont="iso09.16"'
     ;;
     us)
-        [[ -e "/etc/conf.d/consolefont" ]] && sed -i 's:.*consolefont=.*:consolefont="default8x16":' /etc/conf.d/consolefont || echo 'consolefont="default8x16"' >> /etc/conf.d/consolefont
+        avoid_dup 'consolefont="default8x16"'
     ;;
     esac
     
@@ -2757,6 +2806,7 @@ inside() {
         echo "%users   ALL=(root) NOPASSWD: $(which shutdown)" >> /etc/sudoers
         echo "%users   ALL=(root) NOPASSWD: $(which reboot)" >> /etc/sudoers
         echo "%users   ALL=(root) NOPASSWD: $(which halt)" >> /etc/sudoers
+        echo "%users   ALL=(root) NOPASSWD: $(which nano)" >> /etc/sudoers
         echo "%users   ALL=(root) NOPASSWD: $(which emerge)" >> /etc/sudoers
     fi
 
@@ -2774,6 +2824,7 @@ inside() {
     cf "export XDG_CONFIG_HOME=\"/home/${username}/.config\""
     cf "alias reboot='sudo shutdown -r now'"
     cf "alias halt='sudo halt -pi'"
+    cf "alias shutdown='sudo shutdown -h now'"
     cf "alias em='sudo emerge'"
     cf "alias emp='sudo emerge -pv'"
     cf "alias ems='sudo emerge --sync'"
@@ -2783,15 +2834,20 @@ inside() {
     cf "alias pu='sudo nano /etc/portage/package.use'"
     cf "alias pm='sudo nano /etc/portage/package.mask'"
     cf "alias pk='sudo nano /etc/portage/package.keywords'"
-
+    
+    cp ${trg_file} /root/
+    
     cf ""
-    cf 'PS1="\n\[\e[31;1m\][\[\e[37;1m\]\u\[\e[31;1m\]][\[\e[37;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"'
+    cf 'PS1="\n\[\e[32;1m\][\[\e[37;1m\]\u\[\e[32;1m\]][\[\e[34;1m\]\w\[\e[32;1m\]]$ \[\e[0m\]"'
     cf ""
+    
+    echo "" >> /root/.bashrc
+    cf 'PS1="\n\[\e[31;1m\][\u][\[\e[34;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"' >> /root/.bashrc
+    echo "" >> /root/.bashrc
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    inst "--unmerge dmidecode lafilefixer localepurge net-misc/ntp"
-    echo "$(grep -v dmidecode ${compiled} | grep -v lafilefixer | grep -v  localepurge)" > ${compiled}
+    umrg "dmidecode lafilefixer localepurge net-misc/ntp"
     k_check
     end
 }
@@ -2799,12 +2855,9 @@ inside() {
 end() {
     fl "/etc/portage/make.conf" "0" "0"
 
-    sed -i "s:FEATURES=.*:FEATURES=\"-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox\":" ${trg_file}
-
-    echo "$(grep -v 'FETCHCOMMAND=' ${trg_file} | grep -v 'RESUMECOMMAND=')" > ${trg_file}
+    avoid_dup 'FEATURES="-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox"'
     
-    cf 'FETCHCOMMAND="'$(which wget)' -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
-    cf 'RESUMECOMMAND="'$(which wget)' -c -t 5 -T 60 --timeout=15 --passive-ftp -O \${DISTDIR}/\${FILE} \${URI}"'
+    sed -i -e '\!^FETCHCOMMAND=.*$!d' -e '\!^RESUMECOMMAND=.*$!d' ${trg_file}
     
     case ${keymap} in
     trq|trf)
@@ -2875,8 +2928,6 @@ report() {
     ((core--))
     echo "Total CPU cores: ${core}" >> ${rp}
     echo "Total RAM: ${ram_size} KB" >> ${rp}
-    echo "" >> ${rp}
-    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp} && echo "" >> ${rp}; }
     echo "User: ${username}" >> ${rp}
     echo "User password: ${userpass}" >> ${rp}
     echo "Administrator (root) password: ${rootpass}" >> ${rp}
@@ -2887,10 +2938,19 @@ report() {
     if [ -n "${adapters_found}" ]; then
         echo "Network adapters: ${adapters_found}" >> ${rp}
     else
-        echo "No network adapters found." >> ${rp}
+        echo "No network adapters were found." >> ${rp}
     fi
     echo "" >> ${rp}
-    echo "Default mirrors:" >> ${rp}
+
+    if [ "${blimit}" -gt "0" ]; then
+        echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
+    elif [ "${blimit}" == "0" ]; then
+        echo "No bandwidth limit is used during setup." >> ${rp}
+    fi
+
+    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp} && echo "" >> ${rp}; }
+    
+    echo "Mirrors:" >> ${rp}
     
     for m in ${mirrorlist}
     do
@@ -2898,15 +2958,6 @@ report() {
     done
     
     echo "" >> ${rp}
-    
-        if [ "${blimit}" -gt "0" ]; then
-            echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
-        elif [ "${blimit}" == "0" ]; then
-            echo "No bandwidth limit is used during setup." >> ${rp}
-        fi
-    
-    echo "" >> ${rp}
-    
     echo "Partitions used:" >> ${rp}
 
     if [ -n "${boot_part}" ]; then

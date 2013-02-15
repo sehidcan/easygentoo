@@ -78,6 +78,8 @@ for you. Happy compiling!
 - No system logger and no cron included
 - A few performance and security related sysctl settings are included
 - sudo configuration and some aliases are included
+- File manager is Thunar with automount support
+- Login Manager is GDM
 
 *** After Using Easy Gentoo, you should check/change these ***
 - Timezone
