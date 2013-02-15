@@ -9,7 +9,7 @@
 # sehidcan (at) gmail (dot) com #
 #################################
 
-normal=$'\e[0m'; red=$'\e[31;01m'; green=$'\e[32;01m'; yellow=$'\e[33;01m'; blue=$'\e[34;01m'; pink=$'\e[35;01m'; cyan=$'\e[36;01m'; white=$'\e[39;01m'
+normal=$'\e[0m'; red=$'\e[31;01m'; green=$'\e[32;01m'; yellow=$'\e[33;01m'; blue=$'\e[34;01m'; pink=$'\e[35;01m'; cyan=$'\e[36;01m'; white=$'\e[37;01m'
 
 en() { echo "${normal}${*}${normal}";} ; er() { echo "${red}${*}${normal}";} ; eg() { echo "${green}${*}${normal}";} ; ey() { echo "${yellow}${*}${normal}";}
 eb() { echo "${blue}${*}${normal}";} ; ep() { echo "${pink}${*}${normal}";} ; ec() { echo "${cyan}${*}${normal}";} ; ew() { echo "${white}${*}${normal}";}
@@ -2834,10 +2834,16 @@ inside() {
     cf "alias pu='sudo nano /etc/portage/package.use'"
     cf "alias pm='sudo nano /etc/portage/package.mask'"
     cf "alias pk='sudo nano /etc/portage/package.keywords'"
-
+    
+    cp ${trg_file} /root/
+    
     cf ""
-    cf 'PS1="\n\[\e[31;1m\][\[\e[37;1m\]\u\[\e[31;1m\]][\[\e[37;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"'
+    cf 'PS1="\n\[\e[32;1m\][\[\e[37;1m\]\u\[\e[32;1m\]][\[\e[34;1m\]\w\[\e[32;1m\]]$ \[\e[0m\]"'
     cf ""
+    
+    echo "" >> /root/.bashrc
+    cf 'PS1="\n\[\e[31;1m\][\u][\[\e[34;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"' >> /root/.bashrc
+    echo "" >> /root/.bashrc
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
