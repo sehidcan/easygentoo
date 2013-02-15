@@ -3,7 +3,6 @@
 # ----------------------------- #
 #         Easy Gentoo           #
 # ----------------------------- #
-#                               #
 # a small Gentoo install script #
 #              by               #
 #        Şehidcan Erdim         #
@@ -2880,8 +2879,6 @@ report() {
     ((core--))
     echo "Total CPU cores: ${core}" >> ${rp}
     echo "Total RAM: ${ram_size} KB" >> ${rp}
-    echo "" >> ${rp}
-    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp} && echo "" >> ${rp}; }
     echo "User: ${username}" >> ${rp}
     echo "User password: ${userpass}" >> ${rp}
     echo "Administrator (root) password: ${rootpass}" >> ${rp}
@@ -2892,10 +2889,19 @@ report() {
     if [ -n "${adapters_found}" ]; then
         echo "Network adapters: ${adapters_found}" >> ${rp}
     else
-        echo "No network adapters found." >> ${rp}
+        echo "No network adapters were found." >> ${rp}
     fi
     echo "" >> ${rp}
-    echo "Default mirrors:" >> ${rp}
+
+    if [ "${blimit}" -gt "0" ]; then
+		echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
+	elif [ "${blimit}" == "0" ]; then
+		echo "No bandwidth limit is used during setup." >> ${rp}
+	fi
+
+	[[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp} && echo "" >> ${rp}; }
+	
+    echo "Mirrors:" >> ${rp}
     
     for m in ${mirrorlist}
     do
@@ -2903,15 +2909,6 @@ report() {
     done
     
     echo "" >> ${rp}
-    
-        if [ "${blimit}" -gt "0" ]; then
-            echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
-        elif [ "${blimit}" == "0" ]; then
-            echo "No bandwidth limit is used during setup." >> ${rp}
-        fi
-    
-    echo "" >> ${rp}
-    
     echo "Partitions used:" >> ${rp}
 
     if [ -n "${boot_part}" ]; then

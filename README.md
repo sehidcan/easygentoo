@@ -36,16 +36,57 @@ etc. for the installation. (Profile must be named as "profile") With
 a proper profile, it is possible to have a basic system (without X) or
 a ready to use Xfce desktop with a few key strokes.
 
-Using a capable intallation media which has more filesystem utilities,
-you can use "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs" in your
-profile for partitions.
-
-Localization is based on your "keymap". English for "us", Turkish for
-"trq" and "trf".
-
 "Easy Gentoo" was tested on lots of machines with different profiles.
 Many successful installations were made. Hope it becomes a time-saver
 for you. Happy compiling!
+
+*** IMPORTANT NOTES ***
+- Easy Gentoo doesn't do partitioning, you need to do that by yourself.
+  It formats and mounts your selection of existing partitions.
+- Using a capable intallation media which has more filesystem utilities,
+  Easy Gentoo can format, mount, configure partitions for these filesystems:
+  "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
+- Localization is based on your "keymap". English for "us", Turkish for
+  "trq" and "trf".
+- A temporary swap file with 1 GB size is created as a precaution if root
+  partition is bigger than 8 GB
+- There are two install types;
+  basic:   doesn't include X,Gdm,Xfce,Alsa,NetworkManager
+  normal:  includes X,Gdm,Xfce,Alsa,NetworkManager
+  base system configuration is the same for both
+- Easy Gentoo needs an ethernet connection to operate, wireless connection
+  is not an option. Because when connection is lost, reconnection attemps
+  are based on eth* names. (ex. dhcpcd eth0)
+- If the host computer is a laptop, some USE flag changes and additional
+  package merges are made (these have nothing to do with wireless)
+- Stable packages are used
+- Based on a stage3 tarball (latest one)
+- CFLAGS="-march=native -O2 -pipe"
+- LDFLAGS="-Wl,-O1 -Wl,--as-needed -Wl,--sort-common -Wl,--hash-style=gnu"
+- Mirrors for Turkish users:
+      http://ftp.linux.org.tr/gentoo 
+      ftp://ftp.linux.org.tr/gentoo 
+      ftp://mirrors.linuxant.fr/distfiles.gentoo.org
+  Mirrors for other users:
+      ftp://mirrors.linuxant.fr/distfiles.gentoo.org
+      http://gentoo.supp.name
+      http://portage.org.ua
+- Portage profile is "${arch}/13.0/ for basic install"
+  and "${arch}/13.0/desktop for normal install"
+- Kernel has lots of drivers activated to help to get an error free first boot
+- Grub legacy is used, not Grub2
+- No system logger and no cron included
+- A few performance and security related sysctl settings are included
+- sudo configuration and some aliases are included
+
+*** After Using Easy Gentoo, you should check/change these ***
+- Timezone
+- Grub config (parameters, title)
+- Startup services
+- USE flags (default ones may not be enough for you)
+- Mirrors
+- Kernel config (it is recommended to compile a new kernel with a customized config)
+- Compile list (to check if your 'must have' ones are installed)
 
 *** How to use ***
 - Boot from an installation media (ex. Gentoo Minimal Install CD)
@@ -58,7 +99,6 @@ for you. Happy compiling!
   https://github.com/shdcn/easygentoo/blob/master/profile
 - start script:
   sh easygentoo
-
 
 *** Steps for basic install ***
  1- Check if necessary tools/commands are available to continue
@@ -78,7 +118,7 @@ for you. Happy compiling!
     --- Emerge xorg-server and create xorg.conf
     --- Emerge and configure Xfce
     --- Emerge and configure Gdm Login Manager
-    --- Configure evdev settings
+    --- Configure evdev
     --- Emerge NetworkManager
     --- Emerge and configure Alsa
 14- Create/update configuration files (localtime, keymaps, hostname, etc)
