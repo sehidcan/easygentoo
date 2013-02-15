@@ -2842,7 +2842,7 @@ inside() {
     cf ""
     
     echo "" >> /root/.bashrc
-    cf 'PS1="\n\[\e[31;1m\][\u][\[\e[34;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"' >> /root/.bashrc
+    echo 'PS1="\n\[\e[31;1m\][\u][\[\e[34;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"' >> /root/.bashrc
     echo "" >> /root/.bashrc
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
