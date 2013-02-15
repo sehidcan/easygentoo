@@ -1170,7 +1170,7 @@ k_x() {
     cf '    HorizSync  30-80'
     cf '    Option  "Enable" "true"'
     cf '    Option  "TargetRefresh" "60"'
-    cf '    Option "RenderAccel" "True"'
+    cf '    Option  "RenderAccel" "True"'
         case ${type} in
         laptop)
             cf '    Option  "DPMS" "true"'
@@ -1180,14 +1180,14 @@ k_x() {
     cf ''
     cf 'Section "Screen"'
     cf '    Identifier  "general"'
-    cf '    Device  "video-card"'
+    cf '    Device   "video-card"'
     cf '    Monitor  "monitor"'
     cf 'EndSection'
     cf ''
     cf 'Section "ServerLayout"'
     cf '    Identifier  "general-layout"'
     cf '    Screen  "general"'
-    cf '    Option "BackingStore" "True"'
+    cf '    Option  "BackingStore" "True"'
     cf 'EndSection'
     cf ''
     cf 'Section "Module"'
@@ -2842,7 +2842,7 @@ inside() {
     cf ""
     
     echo "" >> /root/.bashrc
-    cf 'PS1="\n\[\e[31;1m\][\u][\[\e[34;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"' >> /root/.bashrc
+    echo 'PS1="\n\[\e[31;1m\][\u][\[\e[34;1m\]\w\[\e[31;1m\]]$ \[\e[0m\]"' >> /root/.bashrc
     echo "" >> /root/.bashrc
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
