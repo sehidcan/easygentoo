@@ -1775,9 +1775,49 @@ prepare() {
         else
             grep "^${s} " ${profile} > p.tmp
             
+            value="$(awk '{print $2}' p.tmp)"
+            
             case ${s} in
+            arch)
+                case ${value} in
+                i686|amd64)
+                    e="x"
+                ;;
+                32|32bit|"32 bit")
+                    value="i686"
+                ;;
+                64|64bit|"64 bit")
+                    value="amd64"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
+            blimit)
+                case ${value} in
+                [0-9] | [0-9][0-9] | [0-9][0-9][0-9])
+                    e="x"
+                ;;
+                [0-9][0-9][0-9][0-9] | [0-9][0-9][0-9][0-9][0-9])
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
+            grub)
+                case ${value} in
+                [s:h]d[a-z] | [s:h]d[a-z][1-9] | [s:h]d[a-z][1-9][0-9] | [s:h]d[a-z][1-9][0-9][0-9])
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
             keymap)
-                value="$(awk '{print $2}' p.tmp)"
                 case ${value} in
                 trq|trf|us)
                     e="x"
@@ -1786,12 +1826,19 @@ prepare() {
                     value="trq"
                 ;;
                 *)
-                    value="us"
+                    default_value "${s}"
                 ;;
                 esac
             ;;
-            *)
-                value="$(awk '{print $2}' p.tmp)"
+            setup)
+                case ${value} in
+                basic|normal)
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
             ;;
             esac
         fi
@@ -2795,10 +2842,6 @@ inside() {
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
     umrg "dmidecode lafilefixer localepurge net-misc/ntp"
-    #temp
-    inst "mpg123"
-    get_files "http://cache.gizmodo.com/assets/resources/mp3/Woman128.mp3"
-    #temp
     k_check
     end
 }
@@ -2894,13 +2937,13 @@ report() {
     echo "" >> ${rp}
 
     if [ "${blimit}" -gt "0" ]; then
-		echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
-	elif [ "${blimit}" == "0" ]; then
-		echo "No bandwidth limit is used during setup." >> ${rp}
-	fi
+        echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
+    elif [ "${blimit}" == "0" ]; then
+        echo "No bandwidth limit is used during setup." >> ${rp}
+    fi
 
-	[[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp} && echo "" >> ${rp}; }
-	
+    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp} && echo "" >> ${rp}; }
+    
     echo "Mirrors:" >> ${rp}
     
     for m in ${mirrorlist}
