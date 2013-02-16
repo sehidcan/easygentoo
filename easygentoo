@@ -2823,7 +2823,6 @@ inside() {
             cf 'net.ipv4.icmp_echo_ignore_broadcasts = 1'
             cf '## ignore bogus icmp errors'
             cf 'net.ipv4.icmp_ignore_bogus_error_responses = 1'
-            cf '## Restrict potential illegal acces via links'
             cf ''
             cf 'vm.min_free_kbytes = 16384'
             
