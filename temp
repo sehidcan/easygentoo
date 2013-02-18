@@ -199,14 +199,14 @@ connect_me() {
 }
 
 mrg() {
-    CONFIG_PROTECT_MASK="/etc" emerge --quiet-build $@ 2> /dev/null
+    CONFIG_PROTECT_MASK="/etc" emerge $@ 2> /dev/null
 }
 
 umrg() {
     cl; eb2 "* "; eg2 "emerge "; er "--unmerge ${@}"
     for p in $@
     do
-        CONFIG_PROTECT_MASK="/etc" emerge --quiet-build --unmerge ${p} 2> /dev/null && { sed -i "\!.*/${p}.*!d" ${compiled}; sed -i "\!.*/${p}.*!d" pkg.lst; }
+        CONFIG_PROTECT_MASK="/etc" emerge --unmerge ${p} 2> /dev/null && { sed -i "\!.*/${p}.*!d" ${compiled}; sed -i "\!.*/${p}.*!d" pkg.lst; }
     done
 }
 
@@ -277,7 +277,7 @@ inst() {
     }
     
     fetch() {
-        killall "$(ps a -o pid,cmd | grep -i 'emerge --quiet-build -f --nodeps' | grep -v 'grep' | cut -d' ' -f1)" &>/dev/null
+        killall "$(ps a -o pid,cmd | grep -i 'emerge -f --nodeps' | grep -v 'grep' | cut -d' ' -f1)" &>/dev/null
         while true
         do
             shut
@@ -291,7 +291,7 @@ inst() {
                     next="no"
                     while [ "${next}" != "yes" ]
                     do
-                        CONFIG_PROTECT_MASK="/etc" emerge --quiet-build -f --nodeps ${pkg} 2> /dev/null
+                        CONFIG_PROTECT_MASK="/etc" emerge -f --nodeps ${pkg} 2> /dev/null
                         
                         case $? in
                         0)
@@ -2296,7 +2296,7 @@ inside() {
             cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
             cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
-    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
+    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
     cf ''
     
     mkdir -p /etc/portage/env/dev-lang
@@ -2491,7 +2491,7 @@ inside() {
             cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
             cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
-    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
+    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
         if [ "${setup}" == "normal" ]; then
             [[ "${type}" == "laptop" ]] && cf 'XFCE_PLUGINS="brightness menu trash"' || cf 'XFCE_PLUGINS="menu trash"'
         fi
@@ -2956,7 +2956,6 @@ inside() {
     cf "alias em='sudo emerge'"
     cf "alias emp='sudo emerge -pv'"
     cf "alias ems='sudo emerge --sync'"
-    cf "alias emq='sudo emerge --quiet-build'"
     cf "alias nn='sudo nano'"
     cf "alias mc='sudo nano /etc/portage/make.conf'"
     cf "alias pu='sudo nano /etc/portage/package.use'"
