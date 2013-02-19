@@ -2986,6 +2986,8 @@ end() {
     
     sed -i -e '\!^FETCHCOMMAND=.*$!d' -e '\!^RESUMECOMMAND=.*$!d' ${trg_file}
     
+    cl
+    
     case ${keymap} in
     trq|trf)
         echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg "..."; sleep 1s; echo
@@ -3022,8 +3024,6 @@ end() {
     cl
     
     [[ -z "${swap_part}" ]] && { swapoff /egswap &>/dev/null; rm -rf /egswap &>/dev/null; }
-    
-    eclean-dist
     
     echo; eb2 "* "; eg2 "Creating a small report at "; er2 "/home/${username}/report.txt"; eg "..."
     report
