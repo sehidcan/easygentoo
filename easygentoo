@@ -2889,11 +2889,9 @@ inside() {
     case ${keymap} in
     trq|trf)
         echo 'LANG="tr_TR.UTF-8"' > /etc/env.d/02locale
-        echo 'LC_MESSAGES="tr_TR.UTF-8"' >> /etc/env.d/02locale
     ;;
     us)
         echo 'LANG="en_US.UTF-8"' > /etc/env.d/02locale
-        echo 'LC_MESSAGES="en_US.UTF-8"' >> /etc/env.d/02locale
     ;;
     esac
     
