@@ -2974,7 +2974,7 @@ inside() {
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    umrg "dmidecode lafilefixer localepurge net-misc/ntp"
+    umrg "dmidecode lafilefixer localepurge ntp"
     k_check
     end
 }

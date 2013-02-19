@@ -199,14 +199,14 @@ connect_me() {
 }
 
 mrg() {
-    CONFIG_PROTECT_MASK="/etc" emerge --quiet-build $@ 2> /dev/null
+    CONFIG_PROTECT_MASK="/etc" emerge $@ 2> /dev/null
 }
 
 umrg() {
     cl; eb2 "* "; eg2 "emerge "; er "--unmerge ${@}"
     for p in $@
     do
-        CONFIG_PROTECT_MASK="/etc" emerge --quiet-build --unmerge ${p} 2> /dev/null && { sed -i "\!.*/${p}.*!d" ${compiled}; sed -i "\!.*/${p}.*!d" pkg.lst; }
+        CONFIG_PROTECT_MASK="/etc" emerge --unmerge ${p} 2> /dev/null && { sed -i "\!.*/${p}.*!d" ${compiled}; sed -i "\!.*/${p}.*!d" pkg.lst; }
     done
 }
 
@@ -277,7 +277,7 @@ inst() {
     }
     
     fetch() {
-        killall "$(ps a -o pid,cmd | grep -i 'emerge --quiet-build -f --nodeps' | grep -v 'grep' | cut -d' ' -f1)" &>/dev/null
+        killall "$(ps a -o pid,cmd | grep -i 'emerge -f --nodeps' | grep -v 'grep' | cut -d' ' -f1)" &>/dev/null
         while true
         do
             shut
@@ -291,7 +291,7 @@ inst() {
                     next="no"
                     while [ "${next}" != "yes" ]
                     do
-                        CONFIG_PROTECT_MASK="/etc" emerge --quiet-build -f --nodeps ${pkg} 2> /dev/null
+                        CONFIG_PROTECT_MASK="/etc" emerge -f --nodeps ${pkg} 2> /dev/null
                         
                         case $? in
                         0)
@@ -442,81 +442,55 @@ k_grub() {
     echo; eg2 "  Creating "; er2 "grub.conf"; eg "..."; sleep 0.5s
 
     krnl="$(ls /boot/kernel-${eg}*)"
-
     [[ -e "${krnl}" ]] && krnl2="$(ls /boot/kernel-${eg}* | cut -c 6-)" || krnl2="/kernel-not-available"
 
     init="$(ls /boot/initramfs-${eg}*)"
-
     [[ -e "${init}" ]] && init2="$(ls /boot/initramfs-${eg}* | cut -c 6-)" || init2="/initramfs-not-available"
     
-    [[ -n "${boot_part}" ]] && bn="$(echo ${boot_part} | cut -c 4-)"
+    [[ -n "${boot_part}" ]] && { bn="$(echo ${boot_part} | cut -c 4-)"; bn="$((bn-1))"; }
 
     rn="$(echo ${root_part} | cut -c 4-)"; rn="$((rn-1))"
 
-        case $(echo ${grub} | cut -c 3-) in
-        [a-z])
-            dn="$(echo ${grub} | cut -c 3- | tr 'a-z' '0-26')"
-        ;;
-        [a-z][0-9])
-            dn="$(echo ${grub} | cut -c 3- | cut -c -1 | tr 'a-z' '0-26')"
-        ;;
-        [a-z][0-9][0-9])
-            dn="$(echo ${grub} | cut -c 3- | cut -c -2 | tr 'a-z' '0-26')"
-        ;;
-        esac
-
+    case $(echo ${grub} | cut -c 3-) in
+    [a-z])
+        dn="$(echo ${grub} | cut -c 3- | tr 'a-z' '0-26')"
+    ;;
+    [a-z][0-9])
+        dn="$(echo ${grub} | cut -c 3- | cut -c -1 | tr 'a-z' '0-26')"
+    ;;
+    [a-z][0-9][0-9])
+        dn="$(echo ${grub} | cut -c 3- | cut -c -2 | tr 'a-z' '0-26')"
+    ;;
+    esac
+    
+    if [ -n "${boot_part}" ]; then
+        pn="${bn}"
+        splash="splashimage=(hd${dn},${pn})/grub/splash.xpm.gz"
+        kernel_line="kernel (hd${dn},${pn})${krnl2}"
+        init_line="initrd (hd${dn},${pn})${init2}"
+    else
+        pn="${rn}"
+        splash="splashimage=(hd${dn},${pn})/boot/grub/splash.xpm.gz"
+        kernel_line="kernel ${krnl}"
+        init_line="initrd ${init}"
+    fi
+    
+    [[ -n "${swap_part}" ]] && kernel_line="${kernel_line} real_resume=LABEL=${swap_label}"
+    kernel_line="${kernel_line} real_root=LABEL=${root_label} udev"
+    [[ "${root_fs}" == "jfs" ]] && [[ -z "${boot_part}" ]] && kernel_line="${kernel_line} ro"
+    
     fl "grub.eg" "0" "d"
     
     cf '#This file is created automatically.'
     cf ' '
     cf 'default 0'
     cf 'timeout 10'
-        if [ -n "${boot_part}" ]; then
-            bn="$((bn-1))"
-            cf "splashimage=(hd${dn},${bn})/grub/splash.xpm.gz"
-            cf ' '
-            cf "title Gentoo Linux"
-            cf "root (hd${dn},${bn})"
-            case ${rootfs} in
-            ext3|ext4)
-                if [ -z "${swap_part}" ]; then
-                    cf "kernel (hd${dn},${bn})${krnl2} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} real_rootflags=data=ordered splash=silent"
-                else
-                    cf "kernel (hd${dn},${bn})${krnl2} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} real_rootflags=data=ordered real_resume=LABEL=${swap_label} splash=silent"
-                fi
-            ;;
-            *)
-                if [ -z "${swap_part}" ]; then
-                    cf "kernel (hd${dn},${bn})${krnl2} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} splash=silent"
-                else
-                    cf "kernel (hd${dn},${bn})${krnl2} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} real_resume=LABEL=${swap_label} splash=silent"
-                fi
-            ;;
-            esac
-			cf "initrd (hd${dn},${bn})${init2}"
-        else
-            cf "splashimage=(hd${dn},${rn})/boot/grub/splash.xpm.gz"
-            cf ' '
-            cf "title Gentoo Linux"
-            cf "root (hd${dn},${rn})"
-            case ${rootfs} in
-            ext3|ext4)
-                if [ -z "${swap_part}" ]; then
-                    cf "kernel ${krnl} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} real_rootflags=data=ordered splash=silent"
-                else
-                    cf "kernel ${krnl} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} real_rootflags=data=ordered real_resume=LABEL=${swap_label} splash=silent"
-                fi
-            ;;
-            *)
-                if [ -z "${swap_part}" ]; then
-                    cf "kernel ${krnl} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} splash=silent"
-                else
-                    cf "kernel ${krnl} root=/dev/ram0 init=/linuxrc ramdisk=8192 real_root=LABEL=${root_label} udev real_rootfs=${root_fs} real_resume=LABEL=${swap_label} splash=silent"
-                fi
-            ;;
-            esac
-			cf "initrd ${init}"
-        fi
+    cf "${splash}"
+    cf ' '
+    cf "title Gentoo Linux"
+    cf "root (hd${dn},${pn})"
+    cf "${kernel_line}"
+    cf "${init_line}"
     cf ' '
     
     if [ -n "${windows}" ]; then
@@ -543,7 +517,7 @@ k_grub() {
 
     cp grub.eg /boot/grub/grub.conf
 
-    echo; eg2 "  Installing grub to "; er2 "MBR"; eg "..."; echo; sleep 0.5s
+    echo; eg2 "  Installing grub to "; er2 "${grub}"; eg "..."; echo; sleep 0.5s
     
     [[ -n "${boot_part}" ]] && cp /proc/mounts /etc/mtab || grep -v rootfs /proc/mounts > /etc/mtab
 
@@ -551,15 +525,9 @@ k_grub() {
     
     fl "ginst.eg" "0" "d"
     
-    if [ -n "${boot_part}" ]; then
-        cf "root (hd${dn},${bn})"
-        cf "setup (hd${dn})"
-        cf "quit"
-    elif [ -z "${boot_part}" ]; then
-        cf "root (hd${dn},${rn})"
-        cf "setup (hd${dn})"
-        cf "quit"
-    fi
+    cf "root (hd${dn},${pn})"
+    cf "setup (hd${dn})"
+    cf "quit"
     
     grub < ${trg_file}
 }
@@ -1732,14 +1700,14 @@ prepare() {
             echo "mkfs.${fs} -L ${label} -b 1024 /dev/${part} > /dev/null 2>&1" >> format.eg
         ;;
         ext3)
-            prm="defaults,noatime,data=ordered"
+            prm="defaults,noatime"
             echo "umount -l /dev/${part} > /dev/null 2>&1" >> format.eg
             echo "mkfs.${fs} -L ${label} -b 1024 /dev/${part} > /dev/null 2>&1" >> format.eg
             echo "tune2fs -c 0 -i 1m -I 256 -O dir_index,has_journal -o journal_data_ordered -m 1 /dev/${part} > /dev/null 2>&1" >> format.eg
             echo "e2fsck -fpDC0 /dev/${part} > /dev/null 2>&1" >> format.eg
         ;;
         ext4)
-            prm="defaults,noatime,data=ordered"
+            prm="defaults,noatime"
             echo "umount -l /dev/${part} > /dev/null 2>&1" >> format.eg
             echo "mkfs.${fs} -L ${label} -b 1024 /dev/${part} > /dev/null 2>&1" >> format.eg
             echo "tune2fs -c 0 -i 1m -O dir_index,has_journal -o journal_data_ordered -m 1 /dev/${part} > /dev/null 2>&1" >> format.eg
@@ -2328,7 +2296,7 @@ inside() {
             cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
             cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
-    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
+    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
     cf ''
     
     mkdir -p /etc/portage/env/dev-lang
@@ -2523,7 +2491,7 @@ inside() {
             cf 'FETCHCOMMAND="${FETCHCOMMAND} --limit-rate='${blimit}'k"'
             cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
-    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y"'
+    cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
         if [ "${setup}" == "normal" ]; then
             [[ "${type}" == "laptop" ]] && cf 'XFCE_PLUGINS="brightness menu trash"' || cf 'XFCE_PLUGINS="menu trash"'
         fi
@@ -2988,7 +2956,6 @@ inside() {
     cf "alias em='sudo emerge'"
     cf "alias emp='sudo emerge -pv'"
     cf "alias ems='sudo emerge --sync'"
-    cf "alias emq='sudo emerge --quiet-build'"
     cf "alias nn='sudo nano'"
     cf "alias mc='sudo nano /etc/portage/make.conf'"
     cf "alias pu='sudo nano /etc/portage/package.use'"
@@ -3007,7 +2974,7 @@ inside() {
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    umrg "dmidecode lafilefixer localepurge net-misc/ntp"
+    umrg "dmidecode lafilefixer localepurge ntp"
     k_check
     end
 }
@@ -3018,6 +2985,8 @@ end() {
     avoid_dup 'FEATURES="-ccache -distcc fixlafiles parallel-fetch sandbox userpriv usersandbox"'
     
     sed -i -e '\!^FETCHCOMMAND=.*$!d' -e '\!^RESUMECOMMAND=.*$!d' ${trg_file}
+    
+    cl
     
     case ${keymap} in
     trq|trf)
@@ -3055,8 +3024,6 @@ end() {
     cl
     
     [[ -z "${swap_part}" ]] && { swapoff /egswap &>/dev/null; rm -rf /egswap &>/dev/null; }
-    
-    eclean-dist
     
     echo; eb2 "* "; eg2 "Creating a small report at "; er2 "/home/${username}/report.txt"; eg "..."
     report
