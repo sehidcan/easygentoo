@@ -2884,18 +2884,18 @@ inside() {
 
     echo; eb2 "* "; eg "Configuring locale settings..."; sleep 0.5s
     
-    [[ -e "/etc/env.d/02locale" ]] && { cp /etc/env.d/02locale /etc/env.d/02locale.backup; rm -rf /etc/env.d/02locale; }
-    
     case ${keymap} in
     trq|trf)
-        echo 'LANG="tr_TR.UTF-8"' > /etc/env.d/02locale
-        echo 'LC_MESSAGES="tr_TR.UTF-8"' >> /etc/env.d/02locale
+        locale_num="$(eselect locale list | tr -d '[]' | awk '/tr_TR.UTF-8/ {print $1}' | head -n1)"
     ;;
     us)
-        echo 'LANG="en_US.UTF-8"' > /etc/env.d/02locale
-        echo 'LC_MESSAGES="en_US.UTF-8"' >> /etc/env.d/02locale
+        locale_num="$(eselect locale list | tr -d '[]' | awk '/en_US.UTF-8/ {print $1}' | head -n1)"
     ;;
     esac
+    
+    refresh
+    eselect locale set "${locale_num}"
+    refresh
     
     fl "/etc/conf.d/consolefont" "0" "0"
     
