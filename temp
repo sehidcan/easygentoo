@@ -66,11 +66,9 @@ avoid_dup_kernel() {
     if [ -n "${@}" ] && [ -n "${trg_file}" ]; then
         allofit="${@}"
         nameonly="$(echo ${allofit} | cut -d'=' -f1)"
-        if [ -n "$(grep ${nameonly} ${trg_file})" ];then
-            sed -i s:".*${nameonly}.*":"${allofit}": ${trg_file}
-        else
-            echo "${allofit}" >> ${trg_file}
-        fi
+        sed -i "\!^#.*${nameonly}.*!d" ${trg_file}
+        sed -i "\!^${nameonly}=.*!d" ${trg_file}
+        echo "${allofit}" >> ${trg_file}
     fi
 }
 
