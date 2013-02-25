@@ -2008,7 +2008,7 @@ inside() {
         cf "tr_TR ISO-8859-9"
     ;;
     us)
-        cf "en_US.UTF-8"
+        cf "en_US.UTF-8 UTF-8"
         cf "en_US ISO-8859-1"
     ;;
     esac
@@ -2737,8 +2737,9 @@ report() {
         echo "No bandwidth limit is used during setup." >> ${rp}
     fi
 
-    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp} && echo "" >> ${rp}; }
+    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp}; }
     
+    echo "" >> ${rp}
     echo "Mirrors:" >> ${rp}
     
     for m in ${mirrorlist}
