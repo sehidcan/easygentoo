@@ -590,7 +590,7 @@ k_kernel() {
             trq|trf)
                 cfg="CONFIG_64BIT=iso8859-9"
             ;;
-            us)
+            br|us)
                 cfg="CONFIG_64BIT=iso8859-1"
             ;;
             esac
@@ -741,6 +741,9 @@ k_x() {
     fl "/home/${username}/.xinitrc" "b" "0"
 
     case ${keymap} in
+    br)
+        cf "setxkbmap -model evdev -layout br"
+    ;;
     trq)
         cf "setxkbmap -model evdev -layout tr"
     ;;
@@ -813,6 +816,9 @@ k_x() {
     cf '    MatchDevicePath "/dev/input/event*"'
     cf '    Driver "evdev"'
         case ${keymap} in
+        br)
+            cf '    Option "XkbLayout" "br"'
+        ;;
         trq|trf)
             cf '    Option "XkbLayout" "tr"'
             case ${keymap} in
@@ -1378,7 +1384,18 @@ prepare() {
             echo "e2fsck -fpDC0 /dev/${part} > /dev/null 2>&1" >> format.eg
         ;;
         ntfs)
-            prm="defaults,locale=tr_TR.utf8,users,nls=utf8,umask=000"
+            case ${keymap} in
+            br)
+                prm="defaults,locale=pt_BR.utf8,users,nls=utf8,umask=000"
+            ;;
+            trq|trf)
+                prm="defaults,locale=tr_TR.utf8,users,nls=utf8,umask=000"
+            ;;
+            us)
+                prm="defaults,locale=en_US.utf8,users,nls=utf8,umask=000"
+            ;;
+            esac
+            
             echo "umount -l /dev/${part} > /dev/null 2>&1" >> format.eg
             echo "mkfs.${fs} -L ${label} --no-indexing -f /dev/${part} > /dev/null 2>&1" >> format.eg
         ;;
@@ -1612,7 +1629,7 @@ prepare() {
             ;;
             keymap)
                 case ${value} in
-                trq|trf|us)
+                br|trq|trf|us)
                     e="x"
                 ;;
                 tr)
@@ -1678,7 +1695,6 @@ prepare() {
     echo; eb2 "* "; eg2 "Preparing partitions... "; ey "(formatting)"; echo; sleep 0.5s; ./format.eg
     echo; eb2 "* "; eg2 "Preparing partitions... "; ey "(mounting)"; echo; sleep 0.5s; ./mount.eg
     rm -rf format.eg mount.eg p.tmp psize.tmp
-    loadkeys ${keymap} &>/dev/null
 }
 
 get_tar() {
@@ -1689,7 +1705,7 @@ get_tar() {
     trq|trf)
         mirrorlist="http://ftp.linux.org.tr/gentoo ftp://ftp.linux.org.tr/gentoo ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
     ;;
-    us)
+    br|us)
         mirrorlist="ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://gentoo.supp.name http://portage.org.ua"
     ;;
     esac
@@ -1938,6 +1954,9 @@ inside() {
     cf 'ACCEPT_LICENSE="*"'
     cf 'MAKEOPTS="-j2"'
         case ${keymap} in
+        br)
+            cf 'LINGUAS="pt_BR"'
+        ;;
         trq|trf)
             cf 'LINGUAS="tr en"'
         ;;
@@ -2003,6 +2022,10 @@ inside() {
     fl "/etc/locale.gen" "0" "0"
     
     case ${keymap} in
+    br)
+        cf "pt_BR.UTF-8 UTF-8"
+        cf "pt_BR ISO-8859-1"
+    ;;
     trq|trf)
         cf "tr_TR.UTF-8 UTF-8"
         cf "tr_TR ISO-8859-9"
@@ -2063,10 +2086,10 @@ inside() {
     
     case ${type} in
     laptop)
-        cf 'USE="${USE} bluetooth irda pcmcia wifi"'
+        cf 'USE="${USE} bluetooth ieee1394 irda laptop lcdfilter lm_sensors pcmcia wifi"'
     ;;
     pc)
-        cf 'USE="${USE} -bluetooth -irda -pcmcia -wifi"'
+        cf 'USE="${USE} -bluetooth -ieee1394 -irda -laptop -lcdfilter -lm_sensors -pcmcia -wifi"'
     ;;
     esac
     
@@ -2127,6 +2150,9 @@ inside() {
     cf 'VIDEO_CARDS="vesa"'
     cf 'INPUT_DEVICES="evdev"'
         case ${keymap} in
+        br)
+            cf 'LINGUAS="pt_BR"'
+        ;;
         trq|trf)
             cf 'LINGUAS="tr"'
         ;;
@@ -2392,6 +2418,10 @@ inside() {
         ;;
         /etc/locale.gen)
             case ${keymap} in
+            br)
+                cf "pt_BR.UTF-8 UTF-8"
+                cf "pt_BR ISO-8859-1"
+            ;;
             trq|trf)
                 cf "tr_TR.UTF-8 UTF-8"
                 cf "tr_TR ISO-8859-9"
@@ -2406,6 +2436,10 @@ inside() {
         ;;
         /etc/localtime)
             case ${keymap} in
+            br)
+                ln -s /usr/share/zoneinfo/America/Sao_Paulo ${d}
+                echo "America/Sao_Paulo" > /etc/timezone
+            ;;
             trq|trf)
                 ln -s /usr/share/zoneinfo/Turkey ${d}
                 echo "Turkey" > /etc/timezone
@@ -2491,7 +2525,15 @@ inside() {
         ;;
         /etc/conf.d/keymaps)
             avoid_dup 'windowkeys="YES"'
-            avoid_dup 'keymap="-u '${keymap}'"'
+            
+            case ${keymap} in
+            br)
+                avoid_dup 'keymap="-u br-abnt2"'
+            ;;
+            *)
+                avoid_dup 'keymap="-u '${keymap}'"'
+            ;;
+            esac
         ;;
         /etc/conf.d/net)
             avoid_dup 'dns_domain_lo="gentoo.powered"'
@@ -2551,6 +2593,9 @@ inside() {
     [[ -e "/etc/env.d/02locale" ]] && { cp /etc/env.d/02locale /etc/env.d/02locale.backup; rm -rf /etc/env.d/02locale; }
     
     case ${keymap} in
+    br)
+        echo 'LANG="pt_BR.utf8"' > /etc/env.d/02locale
+    ;;
     trq|trf)
         echo 'LANG="tr_TR.utf8"' > /etc/env.d/02locale
     ;;
@@ -2562,6 +2607,9 @@ inside() {
     fl "/etc/conf.d/consolefont" "0" "0"
     
     case ${keymap} in
+    br)
+        avoid_dup 'consolefont="lat9w-16"'
+    ;;
     trq|trf)
         avoid_dup 'consolefont="iso09.16"'
     ;;
@@ -2651,6 +2699,9 @@ end() {
     cl
     
     case ${keymap} in
+    br)
+        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Portugese Brazilian"; eg "..."; sleep 1s; echo
+    ;;
     trq|trf)
         echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg "..."; sleep 1s; echo
     ;;
@@ -2667,6 +2718,12 @@ end() {
     cf ""
     
     case ${keymap} in
+    br)
+        cf "pt"
+        cf "pt_BR"
+        cf "pt_BR.UTF-8"
+        cf "pt_BR ISO-8859-1"
+    ;;
     trq|trf)
         cf "tr"
         cf "tr_TR"
@@ -2722,8 +2779,16 @@ report() {
     echo "Administrator (root) password: ${rootpass}" >> ${rp}
     echo "Domainname: ${domainname}" >> ${rp}
     echo "Hostname: ${hostname}" >> ${rp}
-    echo "Keymap: ${keymap}" >> ${rp}
-
+    
+    case ${keymap} in
+    br)
+        echo "Keymap: br-abnt2" >> ${rp}
+    ;;
+    *)
+        echo "Keymap: ${keymap}" >> ${rp}
+    ;;
+    esac
+    
     if [ -n "${adapters_found}" ]; then
         echo "Network adapters: ${adapters_found}" >> ${rp}
     else
