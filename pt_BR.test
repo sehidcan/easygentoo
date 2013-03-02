@@ -486,7 +486,7 @@ k_grub() {
     fi
     
     [[ -n "${swap_part}" ]] && kernel_line="${kernel_line} real_resume=LABEL=${swap_label}"
-    kernel_line="${kernel_line} real_root=LABEL=${root_label} udev"
+    kernel_line="${kernel_line} real_root=LABEL=${root_label} i915.i915_enable_rc6=1 i915.semaphores=1 i915.i915_enable_fbc=1 i915.lvds_downclock=1 pcie_aspm=force intel_iommu=off udev"
     [[ "${root_fs}" == "jfs" ]] && [[ -z "${boot_part}" ]] && kernel_line="${kernel_line} ro"
     
     fl "grub.eg" "0" "d"
@@ -561,8 +561,8 @@ k_kernel() {
     
     case ${type} in
     laptop)
-        get_files "https://raw.github.com/shdcn/easygentoo/master/laptop.config"
-        mv laptop.config temp.config
+        get_files "https://raw.github.com/shdcn/easygentoo/master/dell.xps.15z.config"
+        mv dell.xps.15z.config temp.config
     ;;
     pc)
         get_files "https://raw.github.com/shdcn/easygentoo/master/pc.config"
@@ -2147,6 +2147,12 @@ inside() {
     ;;
     esac
     
+    cf '#DELL'
+    cf 'USE="${USE} dell nvidia"'
+    cf ''
+    
+    cf 'ALSA_CARDS="hda-intel usb-audio"'
+    cf 'VIDEO_CARDS="intel nvidia"'
     cf 'VIDEO_CARDS="vesa"'
     cf 'INPUT_DEVICES="evdev"'
         case ${keymap} in

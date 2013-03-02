@@ -1,0 +1,18 @@
+KEYMAP="br-abnt2"
+CONSOLEFONT="lat9w-16"
+LINGUAS="pt_BR"
+
+echo 'LANG="pt_BR.UTF-8"' > /etc/env.d/02locale
+echo 'LC_MESSAGES="pt_BR.UTF-8"' >> /etc/env.d/02locale
+
+Option      "XkbLayout" "br"
+Option      "XkbModel"  "abnt2"
+
+NOTEBOOK="laptop dell ieee1394 lcdfilter lm_sensors"
+SYSTEM="nvidia opengl threads acpi ssse3 sse4_1 sse4_2 v4l v4l2"
+
+
+
+disable Intel IOMMU in kernel
+
+locale-gen
