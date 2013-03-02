@@ -622,7 +622,7 @@ k_needed() {
     step=$(echo; eb2 "* "; eg "Emerging basic tools..."; echo; sleep 0.5s)
     inst "acpid bash-completion consolekit dbus localepurge net-misc/ntp sudo"
     
-    sntp -s 0.gentoo.pool.ntp.org &>/dev/null
+    sntp -t 30 -s 0.gentoo.pool.ntp.org &>/dev/null
     
     eselect bashcomp enable --global gentoo
 
@@ -1714,7 +1714,7 @@ get_tar() {
     
     mirror_check
     
-    which sntp &>/dev/null && sntp -b -u pool.ntp.org &>/dev/null
+    which sntp &>/dev/null && sntp -t 30 -b pool.ntp.org &>/dev/null
     
     [[ -e "${lt}" ]] && rm -rf ${lt}
     
@@ -2068,13 +2068,13 @@ inside() {
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
     cf ''
     cf '#base system'
-    cf 'USE="${USE} acl acpi bash-completion berkdb bidi branding bzip2 consolekit '
-    cf '    css dbus -gdbm gnutls kmod lzo nptl pam policykit profile rar readline sqlite '
-    cf '    sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf 'USE="${USE} acl acpi bash-completion berkdb bidi bzip2 consolekit css '
+    cf '    dbus gnutls kmod lzo nptl pam policykit profile rar readline '
+    cf '    sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
     cf ''
     cf '#disabled'
-    cf 'USE="${USE} -apm -arts -avahi -beagle -cpudetection -debug -dhclient -doc '
-    cf '    -dso -eds -esd -evo -git -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection '
+    cf 'USE="${USE} -apm -arts -avahi -beagle -branding -cpudetection -debug -dhclient -doc '
+    cf '    -dso -eds -esd -evo -git -gdbm -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection '
     cf '    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono '
     cf '    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs '
     cf '    -xscreensaver -zemberek"'
@@ -2420,7 +2420,7 @@ inside() {
             cp fstab.eg ${d}
         ;;
         /etc/hosts)
-            sed -i s:"^127.0.0.1.*":"127.0.0.1      ${hostname}.${domainname} ${hostname} gentoo": ${d}
+            sed -i s:"^127.0.0.1.*":"127.0.0.1      localhost gentoo ${hostname}": ${d}
         ;;
         /etc/locale.gen)
             case ${keymap} in
@@ -2447,8 +2447,8 @@ inside() {
                 echo "America/Sao_Paulo" > /etc/timezone
             ;;
             trq|trf)
-                ln -s /usr/share/zoneinfo/Turkey ${d}
-                echo "Turkey" > /etc/timezone
+                ln -s /usr/share/zoneinfo/Europe/Istanbul ${d}
+                echo "Europe/Istanbul" > /etc/timezone
             ;;
             us)
                 ln -s /usr/share/zoneinfo/UTC ${d}
@@ -2528,18 +2528,20 @@ inside() {
         /etc/conf.d/hwclock)
             [[ -n "${windows}" ]] && avoid_dup 'clock="local"' || avoid_dup 'clock="UTC"'
             avoid_dup 'clock_systohc="YES"'
+            avoid_dup 'clock_hctosys="YES"'
+            avoid_dup 'clock_args=""'
         ;;
         /etc/conf.d/keymaps)
-            avoid_dup 'windowkeys="YES"'
-            
             case ${keymap} in
             br)
-                avoid_dup 'keymap="-u br-abnt2"'
+                avoid_dup 'keymap="br-abnt2"'
             ;;
             *)
-                avoid_dup 'keymap="-u '${keymap}'"'
+                avoid_dup 'keymap="'${keymap}'"'
             ;;
             esac
+            
+            avoid_dup 'windowkeys="YES"'
         ;;
         /etc/conf.d/net)
             avoid_dup 'dns_domain_lo="gentoo.powered"'
@@ -2547,16 +2549,19 @@ inside() {
             if [ "${setup}" == "basic" ]; then
                 for adapter in ${adapters_found}
                 do
+                    avoid_dup 'auto_'${adapter}'="true"'
                     avoid_dup 'config_'${adapter}'="dhcp"'
                     avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
                     avoid_dup 'mtu_'${adapter}'="1492"'
+                    avoid_dup 'enable_ipv6_'${adapter}'="false"'
                 done
             fi
         ;;
         /etc/modprobe.d/blacklist.conf)
             for d in amd76x_edac bcm43xx de4x5 dv1394 eepro100 eth1394 evbug \
-            garmin_gps i2c_i801 ipv6 net-pf-10 ohci1394 pcspkr prism54 raw1394 \
-            sbp2 snd_aw2 snd_intel8x0m snd_pcsp usbkbd usbmouse video1394
+            garmin_gps i2c_i801 ipv6 ite_cir net-pf-10 nouveau ohci1394 pcspkr \
+            prism54 raw1394 sbp2 snd_aw2 snd_intel8x0m snd_pcsp usbkbd usblp \
+            usbmouse video1394 wl  
             do
                 cf "blacklist ${d}"
             done
@@ -2603,10 +2608,10 @@ inside() {
         echo 'LANG="pt_BR.utf8"' > /etc/env.d/02locale
     ;;
     trq|trf)
-        echo 'LANG="tr_TR.utf8"' > /etc/env.d/02locale
+        echo 'LANG="tr_TR.UTF-8"' > /etc/env.d/02locale
     ;;
     us)
-        echo 'LANG="en_US.utf8"' > /etc/env.d/02locale
+        echo 'LANG="en_US.UTF-8"' > /etc/env.d/02locale
     ;;
     esac
     

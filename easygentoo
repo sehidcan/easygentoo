@@ -622,7 +622,7 @@ k_needed() {
     step=$(echo; eb2 "* "; eg "Emerging basic tools..."; echo; sleep 0.5s)
     inst "acpid bash-completion consolekit dbus localepurge net-misc/ntp sudo"
     
-    sntp -s 0.gentoo.pool.ntp.org &>/dev/null
+    sntp -t 30 -s 0.gentoo.pool.ntp.org &>/dev/null
     
     eselect bashcomp enable --global gentoo
 
@@ -1714,7 +1714,7 @@ get_tar() {
     
     mirror_check
     
-    which sntp &>/dev/null && sntp -b -u pool.ntp.org &>/dev/null
+    which sntp &>/dev/null && sntp -t 30 -b pool.ntp.org &>/dev/null
     
     [[ -e "${lt}" ]] && rm -rf ${lt}
     
