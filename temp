@@ -2776,7 +2776,6 @@ report() {
     echo "List of compiled packages: /home/${username}/${compiled}" >> ${rp}
     echo "Selected CPU architecture: ${arch}" >> ${rp}
     echo "Selected tarball: ${tarball}" >> ${rp}
-    ((core--))
     echo "Total CPU cores: ${core}" >> ${rp}
     echo "Total RAM: ${ram_size} KB" >> ${rp}
     echo "User: ${username}" >> ${rp}
