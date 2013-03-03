@@ -2311,13 +2311,14 @@ inside() {
     cf "net-libs/ptlib wav"
     cf "net-misc/curl -ares gnutls libssh2 ldn"
     cf "net-misc/dhcp minimal"
-    cf "net-misc/networkmanager connection-sharing dhcpcd resolvconf"
+    cf "net-misc/networkmanager connection-sharing dhcpcd resolvconf wext"
     cf "net-misc/ntp caps opentpd -ipv6"
     cf "net-misc/nxserver-freenx nxclient"
     cf "net-misc/wicd -pm-utils"
     cf "net-print/cups acl gnutls pam -perl ppds -python samba ssl"
     cf "net-print/gutenprint gimp ppds"
     cf "net-print/hplip minimal ppds scanner"
+    cf "net-wireless/wpa_supplicant eap-sim ps3 -fasteap madwifi wimax wps"
     cf "sci-astronomy/stellarium stars"
     cf "sci-visualization/gnuplot gd -pdf"
     cf "sys-apps/dbus X"
@@ -2540,16 +2541,14 @@ inside() {
         /etc/conf.d/net)
             avoid_dup 'dns_domain_lo="gentoo.powered"'
             
-            if [ "${setup}" == "basic" ]; then
-                for adapter in ${adapters_found}
-                do
-                    avoid_dup 'auto_'${adapter}'="true"'
-                    avoid_dup 'config_'${adapter}'="dhcp"'
-                    avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
-                    avoid_dup 'mtu_'${adapter}'="1492"'
-                    avoid_dup 'enable_ipv6_'${adapter}'="false"'
-                done
-            fi
+            for adapter in ${adapters_found}
+            do
+                avoid_dup 'auto_'${adapter}'="true"'
+                avoid_dup 'config_'${adapter}'="dhcp"'
+                avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
+                avoid_dup 'mtu_'${adapter}'="1492"'
+                avoid_dup 'enable_ipv6_'${adapter}'="false"'
+            done
         ;;
         /etc/modprobe.d/blacklist.conf)
             for d in amd76x_edac bcm43xx de4x5 dv1394 eepro100 eth1394 evbug \

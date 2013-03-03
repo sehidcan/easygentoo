@@ -559,16 +559,8 @@ k_kernel() {
     ;;
     esac
     
-    case ${type} in
-    laptop)
-        get_files "https://raw.github.com/shdcn/easygentoo/master/dell.xps.15z.config"
-        mv dell.xps.15z.config temp.config
-    ;;
-    pc)
-        get_files "https://raw.github.com/shdcn/easygentoo/master/pc.config"
-        mv pc.config temp.config
-    ;;
-    esac
+    get_files "https://raw.github.com/shdcn/easygentoo/master/dell.xps.15z.config"
+    mv dell.xps.15z.config temp.config
     
     fl "easygentoo.config" "0" "0"
     
@@ -614,8 +606,8 @@ k_must() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
     inst "dhcpcd gentoolkit";
 
-    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dmidecode" ; eg2 " and "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
-    inst "--oneshot dmidecode lafilefixer"
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
+    inst "--oneshot lafilefixer"
 }
 
 k_needed() {
@@ -653,12 +645,6 @@ k_needed() {
     rc-update add udev sysinit &>/dev/null
     rc-update add udev-mount default &>/dev/null
     rc-update add udev-postmount default &>/dev/null
-    
-    case ${type} in
-    pc)
-        rc-update add numlock default &>/dev/null
-    ;;
-    esac
 }
 
 k_portage() {
@@ -970,11 +956,7 @@ k_x() {
     cf '    Option  "Enable" "true"'
     cf '    Option  "TargetRefresh" "60"'
     cf '    Option  "RenderAccel" "True"'
-        case ${type} in
-        laptop)
-            cf '    Option  "DPMS" "true"'
-        ;;
-        esac
+    cf '    Option  "DPMS" "true"'
     cf 'EndSection'
     cf ''
     cf 'Section "Screen"'
@@ -1138,11 +1120,9 @@ k_xfce() {
     step=$(echo; eb2 "* "; eg "Emerging other Xfce packages..."; sleep 0.5s; echo)
     inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     
-    if [ "${type}" == "laptop" ]; then
-        step=$(echo; eb2 "* "; eg "Emerging packages needed for laptops..."; sleep 0.5s; echo)
-        inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
-        rc-update add laptop_mode default &>/dev/null
-    fi
+    step=$(echo; eb2 "* "; eg "Emerging packages needed for laptops..."; sleep 0.5s; echo)
+    inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
+    rc-update add laptop_mode default &>/dev/null
     
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Thunar"; eg "..."; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
@@ -1914,26 +1894,13 @@ inside() {
     
     [[ -z "${swap_part}" ]] && (( "${ram_size}" < "1900000" )) && create_swap_file
     
-    case ${type} in
-    pc)
-        echo 10 > /proc/sys/vm/swappiness
-        echo 600 > /proc/sys/vm/dirty_expire_centisecs
-        echo 600 > /proc/sys/vm/dirty_writeback_centisecs
-        echo 5 > /proc/sys/vm/dirty_background_ratio
-        echo 20 > /proc/sys/vm/dirty_ratio
-        echo 0 > /proc/sys/vm/laptop_mode
-        echo 50 > /proc/sys/vm/vfs_cache_pressure
-    ;;
-    laptop)
-        echo 10 > /proc/sys/vm/swappiness
-        echo 6000 > /proc/sys/vm/dirty_expire_centisecs
-        echo 6000 > /proc/sys/vm/dirty_writeback_centisecs
-        echo 50 > /proc/sys/vm/dirty_background_ratio
-        echo 90 > /proc/sys/vm/dirty_ratio
-        echo 5 > /proc/sys/vm/laptop_mode
-        echo 50 > /proc/sys/vm/vfs_cache_pressure
-    ;;
-    esac
+    echo 10 > /proc/sys/vm/swappiness
+    echo 6000 > /proc/sys/vm/dirty_expire_centisecs
+    echo 6000 > /proc/sys/vm/dirty_writeback_centisecs
+    echo 50 > /proc/sys/vm/dirty_background_ratio
+    echo 90 > /proc/sys/vm/dirty_ratio
+    echo 5 > /proc/sys/vm/laptop_mode
+    echo 50 > /proc/sys/vm/vfs_cache_pressure
     
     echo; eb2 "* "; eg2 "Creating"; er " make.conf..."; sleep 0.5s
 
@@ -2010,14 +1977,7 @@ inside() {
     
     echo; k_portage; k_must
     
-    case $(dmidecode -t 3 | awk '/Type: / {print $2}') in
-    Notebook|Netbook|Laptop)
-        a2v "type=\"laptop\""
-    ;;
-    *)
-        a2v "type=\"pc\""
-    ;;
-    esac
+    a2v "type=\"laptop\""
     
     fl "/etc/locale.gen" "0" "0"
     
@@ -2083,16 +2043,7 @@ inside() {
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
     cf ''
     cf '#laptop'
-    
-    case ${type} in
-    laptop)
-        cf 'USE="${USE} bluetooth ieee1394 irda laptop lcdfilter lm_sensors pcmcia wifi"'
-    ;;
-    pc)
-        cf 'USE="${USE} -bluetooth -ieee1394 -irda -laptop -lcdfilter -lm_sensors -pcmcia -wifi"'
-    ;;
-    esac
-    
+    cf 'USE="${USE} bluetooth ieee1394 irda laptop lcdfilter lm_sensors pcmcia wifi"'
     cf ''
     cf '#internet'
     cf 'USE="${USE} -aim -icq -imap -irc -jabber -msn -oscar -rss -slp -yahoo"'
@@ -2189,7 +2140,7 @@ inside() {
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
         if [ "${setup}" == "normal" ]; then
-            [[ "${type}" == "laptop" ]] && cf 'XFCE_PLUGINS="brightness menu trash"' || cf 'XFCE_PLUGINS="menu trash"'
+            cf 'XFCE_PLUGINS="brightness menu trash"'
         fi
     cf ''
 
@@ -2317,13 +2268,14 @@ inside() {
     cf "net-libs/ptlib wav"
     cf "net-misc/curl -ares gnutls libssh2 ldn"
     cf "net-misc/dhcp minimal"
-    cf "net-misc/networkmanager connection-sharing dhcpcd resolvconf"
+    cf "net-misc/networkmanager connection-sharing dhcpcd resolvconf wext"
     cf "net-misc/ntp caps opentpd -ipv6"
     cf "net-misc/nxserver-freenx nxclient"
     cf "net-misc/wicd -pm-utils"
     cf "net-print/cups acl gnutls pam -perl ppds -python samba ssl"
     cf "net-print/gutenprint gimp ppds"
     cf "net-print/hplip minimal ppds scanner"
+    cf "net-wireless/wpa_supplicant eap-sim ps3 -fasteap madwifi wimax wps"
     cf "sci-astronomy/stellarium stars"
     cf "sci-visualization/gnuplot gd -pdf"
     cf "sys-apps/dbus X"
@@ -2494,27 +2446,13 @@ inside() {
             cf 'net.ipv4.icmp_ignore_bogus_error_responses = 1'
             cf ''
             cf 'vm.min_free_kbytes = 16384'
-            
-            case ${type} in
-            pc)
-                cf "vm.swappiness = 30"
-                cf "vm.dirty_expire_centisecs = 600"
-                cf "vm.dirty_writeback_centisecs = 600"
-                cf "vm.dirty_background_ratio = 5"
-                cf "vm.dirty_ratio = 20"
-                cf "vm.laptop_mode = 0"
-                cf "vm.vfs_cache_pressure = 50"
-            ;;
-            laptop)
-                cf "vm.swappiness = 10"
-                cf "vm.dirty_expire_centisecs = 6000"
-                cf "vm.dirty_writeback_centisecs = 6000"
-                cf "vm.dirty_background_ratio = 50"
-                cf "vm.dirty_ratio = 90"
-                cf "vm.laptop_mode = 5"
-                cf "vm.vfs_cache_pressure = 50"
-            ;;
-            esac
+            cf "vm.swappiness = 10"
+            cf "vm.dirty_expire_centisecs = 6000"
+            cf "vm.dirty_writeback_centisecs = 6000"
+            cf "vm.dirty_background_ratio = 50"
+            cf "vm.dirty_ratio = 90"
+            cf "vm.laptop_mode = 5"
+            cf "vm.vfs_cache_pressure = 50"
             
             sysctl -p &>/dev/null
         ;;
@@ -2546,16 +2484,14 @@ inside() {
         /etc/conf.d/net)
             avoid_dup 'dns_domain_lo="gentoo.powered"'
             
-            if [ "${setup}" == "basic" ]; then
-                for adapter in ${adapters_found}
-                do
-                    avoid_dup 'auto_'${adapter}'="true"'
-                    avoid_dup 'config_'${adapter}'="dhcp"'
-                    avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
-                    avoid_dup 'mtu_'${adapter}'="1492"'
-                    avoid_dup 'enable_ipv6_'${adapter}'="false"'
-                done
-            fi
+            for adapter in ${adapters_found}
+            do
+                avoid_dup 'auto_'${adapter}'="true"'
+                avoid_dup 'config_'${adapter}'="dhcp"'
+                avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
+                avoid_dup 'mtu_'${adapter}'="1492"'
+                avoid_dup 'enable_ipv6_'${adapter}'="false"'
+            done
         ;;
         /etc/modprobe.d/blacklist.conf)
             for d in amd76x_edac bcm43xx de4x5 dv1394 eepro100 eth1394 evbug \
@@ -2695,7 +2631,7 @@ inside() {
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    umrg "dmidecode lafilefixer localepurge ntp"
+    umrg "lafilefixer localepurge ntp"
     k_check
     end
 }
