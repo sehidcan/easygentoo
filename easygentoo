@@ -1926,11 +1926,6 @@ inside() {
     ;;
     laptop)
         echo 10 > /proc/sys/vm/swappiness
-        echo 6000 > /proc/sys/vm/dirty_expire_centisecs
-        echo 6000 > /proc/sys/vm/dirty_writeback_centisecs
-        echo 50 > /proc/sys/vm/dirty_background_ratio
-        echo 90 > /proc/sys/vm/dirty_ratio
-        echo 5 > /proc/sys/vm/laptop_mode
         echo 50 > /proc/sys/vm/vfs_cache_pressure
     ;;
     esac
@@ -2502,11 +2497,6 @@ inside() {
             ;;
             laptop)
                 cf "vm.swappiness = 10"
-                cf "vm.dirty_expire_centisecs = 6000"
-                cf "vm.dirty_writeback_centisecs = 6000"
-                cf "vm.dirty_background_ratio = 50"
-                cf "vm.dirty_ratio = 90"
-                cf "vm.laptop_mode = 5"
                 cf "vm.vfs_cache_pressure = 50"
             ;;
             esac

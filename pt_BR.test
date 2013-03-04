@@ -945,7 +945,7 @@ k_x() {
     cf ''
     cf 'Section "Device"'
     cf '    Identifier "video-card"'
-    cf '    Driver  "vesa"'
+    cf '    Driver  "intel"'
     cf '    Option  "Monitor-default" "monitor"'
     cf 'EndSection'
     cf ''
@@ -1069,6 +1069,19 @@ k_x() {
         no=$(eselect fontconfig list | grep "${cfg}" | tr '[]' ' ' | awk '{print $1}')
         eselect fontconfig enable "${no}" &>/dev/null
     done
+    
+    k_bumblebee
+}
+
+k_bumblebee() {
+    step=$(echo; eb2 "* "; eg2 "Emerging "; eg "bumblebee..."; sleep 0.5s; echo)
+    inst "bumblebee"
+    refresh
+    inst "bumblebee"
+    
+    rc-update add bumblebee default
+    groupadd bumblebee
+    gpasswd -a ${username} bumblebee
 }
 
 k_gdm() {
@@ -1123,6 +1136,96 @@ k_xfce() {
     step=$(echo; eb2 "* "; eg "Emerging packages needed for laptops..."; sleep 0.5s; echo)
     inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
     rc-update add laptop_mode default &>/dev/null
+    
+    fl "/etc/local.d/10-powermanagement.start" "0" "d"
+    
+    cf '#############################'
+    cf '# Power Aware CPU Scheduler #'
+    cf '#############################'
+    cf ''
+    cf 'echo 1 > /sys/devices/system/cpu/sched_mc_power_savings'
+    cf ''
+    cf '###############################'
+    cf '# Autosuspend for USB devices #'
+    cf '###############################'
+    cf ''
+    cf '### Laptop_Integrated_Webcam_2M [CN04MYKF724871AHN1G1A01]'
+    cf 'echo auto > /sys/bus/usb/devices/1-1.4/power/control'
+    cf ''
+    cf '###############################'
+    cf '# Autosuspend for PCI devices #'
+    cf '###############################'
+    cf ''
+    cf '### Host bridge: Intel Corporation 2nd Generation Core Processor Family DRAM Controller (rev 09)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:00.0/power/control'
+    cf ''
+    cf '### PCI bridge: Intel Corporation Xeon E3-1200/2nd Generation Core Processor Family PCI Express Root Port (rev 09)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:01.0/power/control'
+    cf ''
+    cf '### VGA compatible controller: Intel Corporation 2nd Generation Core Processor Family Integrated Graphics Controller (rev 09)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:02.0/power/control'
+    cf ''
+    cf '### Communication controller: Intel Corporation 6 Series/C200 Series Chipset Family MEI Controller #1 (rev 04)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:16.0/power/control'
+    cf ''
+    cf '### USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2 (rev 05)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1a.0/power/control'
+    cf ''
+    cf '### Audio device: Intel Corporation 6 Series/C200 Series Chipset Family High Definition Audio Controller (rev 05)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1b.0/power/control'
+    cf ''
+    cf '### PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 1 (rev b5)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1c.0/power/control'
+    cf ''
+    cf '### PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 2 (rev b5)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1c.1/power/control'
+    cf ''
+    cf '### PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 4 (rev b5)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1c.3/power/control'
+    cf ''
+    cf '### PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 5 (rev b5)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1c.4/power/control'
+    cf ''
+    cf '### PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 6 (rev b5)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1c.5/power/control'
+    cf ''
+    cf '### USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #1 (rev 05)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1d.0/power/control'
+    cf ''
+    cf '### ISA bridge: Intel Corporation HM67 Express Chipset Family LPC Controller (rev 05)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1f.0/power/control'
+    cf ''
+    cf '### SATA controller: Intel Corporation 6 Series/C200 Series Chipset Family 6 port SATA AHCI Controller (rev 05)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1f.2/power/control'
+    cf ''
+    cf '### SMBus: Intel Corporation 6 Series/C200 Series Chipset Family SMBus Controller (rev 05)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:00\:1f.3/power/control'
+    cf ''
+    cf '### VGA compatible controller: nVidia Corporation GF108 [GeForce GT 540M] (rev a1)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:01\:00.0/power/control'
+    cf ''
+    cf '### Network controller: Intel Corporation Centrino Advanced-N 6230 (rev 34)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:03\:00.0/power/control'
+    cf ''
+    cf '### USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev 04)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:04\:00.0/power/control'
+    cf ''
+    cf '### Ethernet controller: Atheros Communications AR8151 v2.0 Gigabit Ethernet (rev c0)'
+    cf 'echo auto > /sys/bus/pci/devices/0000\:06\:00.0/power/control'
+    cf ''
+    cf '##########################################'
+    cf '# Intel HDA Audio Codec Power Management #'
+    cf '##########################################'
+    cf ''
+    cf 'echo 1 > /sys/module/snd_hda_intel/parameters/power_save'
+    cf ''
+    cf '##############################'
+    cf '# AHCI Link Power Management #'
+    cf '##############################'
+    cf ''
+    cf 'echo min_power > /sys/class/scsi_host/host0/link_power_management_policy'
+    
+    chmod a+x /etc/local.d/10-powermanagement.start
     
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Thunar"; eg "..."; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
@@ -2103,9 +2206,8 @@ inside() {
     cf ''
     
     cf 'ALSA_CARDS="hda-intel usb-audio"'
-    cf 'VIDEO_CARDS="intel nvidia"'
-    cf 'VIDEO_CARDS="vesa"'
-    cf 'INPUT_DEVICES="evdev"'
+    cf 'VIDEO_CARDS="intel nvidia vesa"'
+    cf 'INPUT_DEVICES="evdev v4l"'
         case ${keymap} in
         br)
             cf 'LINGUAS="pt_BR"'
@@ -2447,11 +2549,6 @@ inside() {
             cf ''
             cf 'vm.min_free_kbytes = 16384'
             cf "vm.swappiness = 10"
-            cf "vm.dirty_expire_centisecs = 6000"
-            cf "vm.dirty_writeback_centisecs = 6000"
-            cf "vm.dirty_background_ratio = 50"
-            cf "vm.dirty_ratio = 90"
-            cf "vm.laptop_mode = 5"
             cf "vm.vfs_cache_pressure = 50"
             
             sysctl -p &>/dev/null
