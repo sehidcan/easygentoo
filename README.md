@@ -27,9 +27,9 @@ Bash script for easy Gentoo installation
 "Easy Gentoo" is a bash script, which is basically a combination of
 Gentoo Handbook steps, that installs Gentoo Linux from a stage3 tarball.
 The overall procedure is unattended, everything is handled by script.
-Installation includes "localization (English and Turkish), kernel
-compilation, X server setup, desktop environment setup (Xfce)" and more.
-These steps are enabled or disabled according to a profile.
+Installation includes "localization (English, Brazilian and Turkish),
+kernel compilation, X server setup, desktop environment setup (Xfce)"
+and more. These steps are enabled or disabled according to a profile.
 
 Profile is a simple text file which has the necessary options, settings
 etc. for the installation. (Profile must be named as "profile") With
@@ -46,8 +46,8 @@ for you. Happy compiling!
 - Using a capable intallation media which has more filesystem utilities,
   Easy Gentoo can format, mount, configure partitions for these filesystems:
   "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
-- Localization is based on your "keymap". English for "us", Turkish for
-  "trq" and "trf".
+- Localization is based on your "keymap". "us" is for English,
+  "br" is for Brazilian, "trq" and "trf" are for Turkish.
 - A temporary swap file with 1 GB size is created as a precaution if root
   partition is bigger than 8 GB
 - There are two install types;

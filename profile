@@ -2,7 +2,7 @@
 
 ## Note: if you want to use a default value, then you don't have to specify it
 
-## keymap        name (trq, trf or us...) - default: us
+## keymap        name (br, trq, trf or us...) - default: us
 keymap           trq
 
 ## boot          partition    label
