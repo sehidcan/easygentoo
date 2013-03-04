@@ -1949,7 +1949,7 @@ move() {
     
     touch ${mnt}/chroot.eg &>/dev/null
     
-    chroot ${mnt} ./${eg}
+    chroot ${mnt} sh ${eg}
 }
 
 create_swap_file() {
