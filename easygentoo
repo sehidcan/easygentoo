@@ -2064,7 +2064,7 @@ inside() {
     cf ''
     cf '#base system'
     cf 'USE="${USE} acl acpi bash-completion berkdb bidi bzip2 consolekit css '
-    cf '    dbus gnutls kmod lzo nptl pam policykit profile rar readline '
+    cf '    dbus gnutls kmod lzo nptl pam policykit profile python rar readline '
     cf '    sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
     cf ''
     cf '#disabled'
@@ -2213,6 +2213,7 @@ inside() {
     cf "dev-lang/swig guile"
     cf "dev-libs/glib -fam"
     cf "dev-libs/libcdio cddb"
+    cf "dev-libs/libxml2 python"
     cf "dev-libs/libxslt crypt python"
     cf "dev-libs/xmlrpc-c curl libwww"
     cf "dev-python/PyQt4 sql webkit kde multimedia"
