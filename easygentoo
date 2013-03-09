@@ -2411,7 +2411,7 @@ inside() {
             cp fstab.eg ${d}
         ;;
         /etc/hosts)
-            sed -i s:"^127.0.0.1.*":"127.0.0.1      localhost gentoo ${hostname}": ${d}
+            sed -i s:"^127.0.0.1.*":"127.0.0.1    ${hostname}.${domainname} ${hostname} localhost": ${d}
         ;;
         /etc/locale.gen)
             case ${keymap} in
