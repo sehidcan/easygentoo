@@ -96,7 +96,7 @@ for you. Happy compiling!
   wget https://raw.github.com/shdcn/easygentoo/master/easygentoo
   chmod +x easygentoo
   chmod 755 easygentoo
-- create a profile
+- create a profile in the same directory where script is placed
   for more information on profile please read:
   https://github.com/shdcn/easygentoo/blob/master/profile
 - start script:

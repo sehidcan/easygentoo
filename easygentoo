@@ -1237,11 +1237,13 @@ intro() {
 }
 
 check() {
+    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp *.lst ${lt} ${vl}
+    
     [[ "$(pwd)" != "/root" ]] && { echo; er2 "Please move the script to "; ey2 "/root"; er " and start it again."; exit 1; }
     
     [[ ! -e "${profile}" ]] && { cl; er "  Looks like you don't have a profile. Please create one."; echo; exit 1; }
     
-    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp *.lst ${lt} ${vl}
+    [[ ! -d "${mnt}" ]] && mkdir -p ${mnt}
     
     for var in "arch blimit domainname grub hostname keymap setup rootpass userpass username windows"
     do
@@ -1259,18 +1261,6 @@ check() {
     done
     
     echo "$(tr -s '[:blank:]' ' ' < ${profile})" > ${profile}
-    
-    lc_e=$(grep -c emerge ${profile})
-    
-    case ${lc_e} in
-    [1-9]|[1-9][0-9])
-        new_line="$(grep emerge ${profile} | cut -c 8- | sed '{:q;N;s/\n/ /g;t q}')"
-        sed -i "\!.*emerge.*!d" ${profile}
-        echo "emerge ${new_line}" >> ${profile}
-    ;;
-    esac
-
-    [[ ! -d "${mnt}" ]] && mkdir -p ${mnt}
     
     necessary="awk bash cat chmod chroot clear cp cut fdisk free grep ip loadkeys md5sum mkdir mount mv rm sed setterm sha512sum sleep swapoff swapon tar touch tr umount wc wget"
     nicknames="boot extra home root swap"
