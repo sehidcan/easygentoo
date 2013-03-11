@@ -1,0 +1,102 @@
+check if the script is located in /root directory
+check if there is a profile
+check for necessary filesystem utilities, according to filesystems selected for partitions in profile, that should be in the installation media and take a note to emerge them during install
+check if necessary commands/utilities are available in the installation media
+check internet connection
+extract settings from profile
+create two files, one for formatting and one for mounting partitions
+create fstab template
+check number of cpu cores
+check if root partition is big enough
+determine cpu specific USE flags
+execute previously created format and mount files
+check mirrors
+sync date and time with pool.ntp.org
+get latest tarball name
+download latest tarball, do a sha512sum check, extract tarball in the background
+download latest portage snapshot, do a md5sum check, extract snapshot in the background
+check if background extract jobs are done
+prepare for chroot (move all necessary files, mount /proc and /dev)
+---chroot---
+start background function which checks for connection status every 60 seconds
+create a temporary swap file if there is not a swap partition and the RAM is smaller than 1800 MB
+change some system settings like swappiness and vfs_cache_pressure temporarily
+create a temporary /etc/portage/make.conf just to emerge portage and some utilities
+create package specific CFLAGS for firefox, xulrunner, python and sqlite
+select appropriate portage profile
+emerge portage
+emerge dhcpcd gentoolkit dmidecode lafilefixer
+create /etc/locale.gen and execute locale-gen
+update /etc/portage/make.conf to include all necessary settings
+create /etc/portage/package.use
+emerge -e system
+emerge genkernel gentoo-sources
+download custom kernel config from easygentoo repository
+compile kernel using custom config and genkernel
+emerge grub
+create /boot/grub/grub.conf
+install grub to MBR (or user selected target)
+emerge acpid bash-completion consolekit dbus localepurge net-misc/ntp sudo
+start services (dbus consolekit udev)
+rc-update add acpid default
+rc-update add consolekit default
+rc-update add dbus default
+rc-update add udev sysinit
+rc-update add udev-mount default
+rc-update add udev-postmount default
+rc-update add numlock default
+emerge xorg-server
+emerge dejavu eselect-fontconfig fontconfig mesa-progs setxkbmap
+create /home/${username}/.xinitrc
+emerge xfce4-meta xfce4-notifyd
+emerge app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager
+(if script is running on a laptop) emerge xfce4-battery-plugin xfce4-power-manager laptop-mode-tools
+(if script is running on a laptop) rc-update add laptop_mode default
+emerge thunar thunar-archive-plugin thunar-volman trayer
+add user to plugdev group
+change /etc/env.d/90xsession
+create /home/${username}/.gtkrc-2.0
+emerge gdm gdm-themes
+add user to gdm group
+change gdm settings using /etc/X11/gdm/custom.conf
+create /home/${username}/.dmrc
+rc-update add xdm default
+change /etc/conf.d/xdm
+eselect opengl set xorg-x11
+create necessary files in /etc/X11/xorg.conf.d/ (including evdev.conf)
+create /etc/X11/xorg.conf
+create /home/${username}/.fonts.conf
+eselect fontconfig enable ... (some settings for dejavu font)
+emerge networkmanager nm-applet
+rc-update add NetworkManager default
+change NetworkManager permissions in /usr/share/polkit-1/actions/org.freedesktop.NetworkManager.policy
+emerge alsa-utils
+rc-update add alsasound boot
+create /etc/asound.conf
+create /etc/conf.d/alsasound
+amixer set Master unmute
+amixer set PCM unmute
+alsactl -f /var/lib/alsa/asound.state store
+create/change configuration files (/etc/fstab /etc/hosts /etc/locale.gen /etc/localtime)
+create/change configuration files (/etc/rc.conf /etc/sysctl.conf /etc/conf.d/domainname)
+create/change configuration files (/etc/conf.d/hostname /etc/conf.d/hwclock)
+create/change configuration files (/etc/conf.d/keymaps /etc/conf.d/net /etc/modprobe.d/blacklist.conf)
+emerge --config timezone-data
+create /etc/env.d/02locale
+change /etc/conf.d/consolefont
+rc-update add consolefont boot
+change root password
+create user (default groups: audio cdrom cdrw disk plugdev portage usb users video wheel)
+change user password
+change /etc/sudoers
+add default alias settings to /home/${username}/.bashrc
+emerge --unmerge dmidecode lafilefixer localepurge ntp
+emerge -uDN world
+revdep-rebuild
+localepurge
+delete temporary swap file
+create a report
+delete all unnecessary/temporary files
+move stage3 tarball, portage snapshot, profile and easygentoo to /home/${username}/
+move compiled.txt to /home/${username}/
+exit easygentoo and shutdown computer
