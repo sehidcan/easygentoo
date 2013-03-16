@@ -424,7 +424,7 @@ inst() {
                     rcount="0"
                 ;;
                 *)
-                    ((rcount++)))
+                    ((rcount++))
                     rm -rf /var/tmp/portage/*$(echo ${package} | cut -c 2-)* &>/dev/null
                     
                     case ${rcount} in
