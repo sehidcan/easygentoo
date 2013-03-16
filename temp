@@ -2102,16 +2102,18 @@ inside() {
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
     cf ''
     cf '#base system'
-    cf 'USE="${USE} acl acpi bash-completion berkdb bidi bzip2 consolekit css '
-    cf '    dbus gnutls kmod lzo nptl pam policykit profile python rar readline '
-    cf '    sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf 'USE="${USE} acl acpi bash-completion berkdb bidi bzip2 consolekit crypt css dbus '
+    cf '    gnutls kmod lzo ncurses nls nptl pam policykit profile rar readline '
+    cf '    sqlite sqlite3 ssl symlink tcpd truetype udev unicode usb vdpau zlib"'
+    cf ''
+    cf '#toolchain'
+    cf 'USE="${USE} fortran mudflap openmp"'
     cf ''
     cf '#disabled'
     cf 'USE="${USE} -apm -arts -avahi -beagle -branding -cpudetection -debug -dhclient -doc '
-    cf '    -dso -eds -esd -evo -git -gdbm -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection '
-    cf '    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono '
-    cf '    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs '
-    cf '    -xscreensaver -zemberek"'
+    cf '    -dso -eds -esd -evo -git -gdbm -gphoto2 -gpm -hal -hunspell -introspection -ipv6 '
+    cf '    -java -joystick -kdeprefix -kerberos -ldap -minimal -mono -mysql -ncurses -nss '
+    cf '    -openexr -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
     cf ''
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
@@ -2181,7 +2183,7 @@ inside() {
     ;;
     esac
     
-    cf 'VIDEO_CARDS="vesa"'
+    cf 'VIDEO_CARDS="dummy fbdev vesa"'
     
     case ${type} in
     pc)
