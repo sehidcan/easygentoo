@@ -1952,6 +1952,7 @@ inside() {
     net_watch &
     
     echo; eg "  !!--Chroot--!!"
+    timesync
     
     fl "/etc/etc-update.conf" "0" "0"
     
