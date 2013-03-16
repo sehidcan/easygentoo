@@ -649,7 +649,7 @@ k_must() {
     inst "dhcpcd gentoolkit";
 
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
-    inst "--oneshot lafilefixer"
+    inst "lafilefixer"
 }
 
 k_needed() {
@@ -2112,8 +2112,8 @@ inside() {
     cf '#disabled'
     cf 'USE="${USE} -apm -arts -avahi -beagle -branding -cpudetection -debug -dhclient -doc '
     cf '    -dso -eds -esd -evo -git -gdbm -gphoto2 -gpm -hal -hunspell -introspection -java '
-    cf '    -joystick -kdeprefix -kerberos -ldap -minimal -mono -mysql -ncurses -nss '
-    cf '    -openexr -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
+    cf '    -joystick -kdeprefix -kerberos -ldap -minimal -mono -mysql -nss -openexr '
+    cf '    -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
     cf ''
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
