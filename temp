@@ -394,12 +394,12 @@ inst() {
                 esac
                 
                 if [ -e "sys.eg" ]; then
-                    mrg -e --oneshot --nodeps ${package}
+                    mrg -e --oneshot --nodeps ${package} || mrg -e --oneshot ${package}
                 else
                     if [ -n "$(grep ${package} ${compiled})" ]; then
-                        mrg -u --oneshot --nodeps ${package}
+                        mrg -u --oneshot --nodeps ${package} || mrg -u --oneshot ${package}
                     else
-                        mrg --oneshot --nodeps ${package}
+                        mrg --oneshot --nodeps ${package} || mrg --oneshot ${package}
                     fi
                 fi
                 
