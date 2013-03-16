@@ -1205,7 +1205,7 @@ k_xfce() {
 k_system() {
     touch sys.eg
     step=$(echo; eb2 "* "; eg "Updating system..."; echo; sleep 0.5s)
-    inst "-e system"
+    inst "-De system"
     rm -rf sys.eg
 }
 
