@@ -614,8 +614,8 @@ k_must() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
     inst "dhcpcd gentoolkit";
 
-    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dmidecode" ; eg2 " and "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
-    inst "--oneshot dmidecode lafilefixer"
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
+    inst "--oneshot lafilefixer"
 }
 
 k_needed() {
@@ -1237,11 +1237,13 @@ intro() {
 }
 
 check() {
+    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp *.lst ${lt} ${vl}
+    
     [[ "$(pwd)" != "/root" ]] && { echo; er2 "Please move the script to "; ey2 "/root"; er " and start it again."; exit 1; }
     
     [[ ! -e "${profile}" ]] && { cl; er "  Looks like you don't have a profile. Please create one."; echo; exit 1; }
     
-    rm -rf easygentoo.config *.DIGESTS *.eg *.md5sum *.tmp *.lst ${lt} ${vl}
+    [[ ! -d "${mnt}" ]] && mkdir -p ${mnt}
     
     for var in "arch blimit domainname grub hostname keymap setup rootpass userpass username windows"
     do
@@ -1259,18 +1261,6 @@ check() {
     done
     
     echo "$(tr -s '[:blank:]' ' ' < ${profile})" > ${profile}
-    
-    lc_e=$(grep -c emerge ${profile})
-    
-    case ${lc_e} in
-    [1-9]|[1-9][0-9])
-        new_line="$(grep emerge ${profile} | cut -c 8- | sed '{:q;N;s/\n/ /g;t q}')"
-        sed -i "\!.*emerge.*!d" ${profile}
-        echo "emerge ${new_line}" >> ${profile}
-    ;;
-    esac
-
-    [[ ! -d "${mnt}" ]] && mkdir -p ${mnt}
     
     necessary="awk bash cat chmod chroot clear cp cut fdisk free grep ip loadkeys md5sum mkdir mount mv rm sed setterm sha512sum sleep swapoff swapon tar touch tr umount wc wget"
     nicknames="boot extra home root swap"
@@ -1461,20 +1451,20 @@ prepare() {
         blimit)
             value="0"
         ;;
-        keymap)
-            value="us"
-        ;;
         domainname)
             value="easygentoo"
         ;;
-        username)
-            value="owner"
+        grub)
+            value="$(echo ${root_part} | sed s:[0-9].*::)"
         ;;
         hostname)
             value="freshinstall"
         ;;
-        rootpass)
-            value="toor"
+        keymap)
+            value="us"
+        ;;
+        username)
+            value="owner"
         ;;
         userpass)
             value="resu"
@@ -1482,11 +1472,14 @@ prepare() {
         root)
             echo; er "  /root partition is not specified in profile. Please change your profile and start again."; echo; exit 1
         ;;
+        rootpass)
+            value="toor"
+        ;;
         setup)
             value="basic"
         ;;
-        grub)
-            value="$(echo ${root_part} | sed s:[0-9].*::)"
+        type)
+            value="pc"
         ;;
         windows)
             value=""
@@ -1575,7 +1568,7 @@ prepare() {
 
     chmod +x format.eg; chmod +x mount.eg
     
-    settings="arch blimit domainname grub hostname keymap setup rootpass userpass username windows"
+    settings="arch blimit domainname grub hostname keymap rootpass setup type userpass username windows"
 
     for s in ${settings}
     do
@@ -1643,6 +1636,16 @@ prepare() {
             setup)
                 case ${value} in
                 basic|normal)
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
+            type)
+                case ${value} in
+                laptop|pc)
                     e="x"
                 ;;
                 *)
@@ -1866,7 +1869,7 @@ move() {
     
     touch ${mnt}/chroot.eg &>/dev/null
     
-    chroot ${mnt} ./${eg}
+    chroot ${mnt} sh ${eg}
 }
 
 create_swap_file() {
@@ -1926,11 +1929,6 @@ inside() {
     ;;
     laptop)
         echo 10 > /proc/sys/vm/swappiness
-        echo 6000 > /proc/sys/vm/dirty_expire_centisecs
-        echo 6000 > /proc/sys/vm/dirty_writeback_centisecs
-        echo 50 > /proc/sys/vm/dirty_background_ratio
-        echo 90 > /proc/sys/vm/dirty_ratio
-        echo 5 > /proc/sys/vm/laptop_mode
         echo 50 > /proc/sys/vm/vfs_cache_pressure
     ;;
     esac
@@ -2010,15 +2008,6 @@ inside() {
     
     echo; k_portage; k_must
     
-    case $(dmidecode -t 3 | awk '/Type: / {print $2}') in
-    Notebook|Netbook|Laptop)
-        a2v "type=\"laptop\""
-    ;;
-    *)
-        a2v "type=\"pc\""
-    ;;
-    esac
-    
     fl "/etc/locale.gen" "0" "0"
     
     case ${keymap} in
@@ -2069,7 +2058,7 @@ inside() {
     cf ''
     cf '#base system'
     cf 'USE="${USE} acl acpi bash-completion berkdb bidi bzip2 consolekit css '
-    cf '    dbus gnutls kmod lzo nptl pam policykit profile rar readline '
+    cf '    dbus gnutls kmod lzo nptl pam policykit profile python rar readline '
     cf '    sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
     cf ''
     cf '#disabled'
@@ -2148,7 +2137,16 @@ inside() {
     esac
     
     cf 'VIDEO_CARDS="vesa"'
-    cf 'INPUT_DEVICES="evdev"'
+    
+    case ${type} in
+    pc)
+        cf 'INPUT_DEVICES="evdev"'
+    ;;
+    laptop)
+        cf 'INPUT_DEVICES="evdev synaptics"'
+    ;;
+    esac
+    
         case ${keymap} in
         br)
             cf 'LINGUAS="pt_BR"'
@@ -2218,6 +2216,7 @@ inside() {
     cf "dev-lang/swig guile"
     cf "dev-libs/glib -fam"
     cf "dev-libs/libcdio cddb"
+    cf "dev-libs/libxml2 python"
     cf "dev-libs/libxslt crypt python"
     cf "dev-libs/xmlrpc-c curl libwww"
     cf "dev-python/PyQt4 sql webkit kde multimedia"
@@ -2311,13 +2310,14 @@ inside() {
     cf "net-libs/ptlib wav"
     cf "net-misc/curl -ares gnutls libssh2 ldn"
     cf "net-misc/dhcp minimal"
-    cf "net-misc/networkmanager connection-sharing dhcpcd resolvconf"
+    cf "net-misc/networkmanager connection-sharing dhcpcd resolvconf wext"
     cf "net-misc/ntp caps opentpd -ipv6"
     cf "net-misc/nxserver-freenx nxclient"
     cf "net-misc/wicd -pm-utils"
     cf "net-print/cups acl gnutls pam -perl ppds -python samba ssl"
     cf "net-print/gutenprint gimp ppds"
     cf "net-print/hplip minimal ppds scanner"
+    cf "net-wireless/wpa_supplicant eap-sim ps3 -fasteap madwifi wimax wps"
     cf "sci-astronomy/stellarium stars"
     cf "sci-visualization/gnuplot gd -pdf"
     cf "sys-apps/dbus X"
@@ -2414,7 +2414,7 @@ inside() {
             cp fstab.eg ${d}
         ;;
         /etc/hosts)
-            sed -i s:"^127.0.0.1.*":"127.0.0.1      localhost gentoo ${hostname}": ${d}
+            sed -i s:"^127.0.0.1.*":"127.0.0.1    ${hostname}.${domainname} ${hostname} localhost": ${d}
         ;;
         /etc/locale.gen)
             case ${keymap} in
@@ -2501,11 +2501,6 @@ inside() {
             ;;
             laptop)
                 cf "vm.swappiness = 10"
-                cf "vm.dirty_expire_centisecs = 6000"
-                cf "vm.dirty_writeback_centisecs = 6000"
-                cf "vm.dirty_background_ratio = 50"
-                cf "vm.dirty_ratio = 90"
-                cf "vm.laptop_mode = 5"
                 cf "vm.vfs_cache_pressure = 50"
             ;;
             esac
@@ -2540,16 +2535,14 @@ inside() {
         /etc/conf.d/net)
             avoid_dup 'dns_domain_lo="gentoo.powered"'
             
-            if [ "${setup}" == "basic" ]; then
-                for adapter in ${adapters_found}
-                do
-                    avoid_dup 'auto_'${adapter}'="true"'
-                    avoid_dup 'config_'${adapter}'="dhcp"'
-                    avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
-                    avoid_dup 'mtu_'${adapter}'="1492"'
-                    avoid_dup 'enable_ipv6_'${adapter}'="false"'
-                done
-            fi
+            for adapter in ${adapters_found}
+            do
+                avoid_dup 'auto_'${adapter}'="true"'
+                avoid_dup 'config_'${adapter}'="dhcp"'
+                avoid_dup 'dhcpcd_'${adapter}'="-t 10"'
+                avoid_dup 'mtu_'${adapter}'="1492"'
+                avoid_dup 'enable_ipv6_'${adapter}'="false"'
+            done
         ;;
         /etc/modprobe.d/blacklist.conf)
             for d in amd76x_edac bcm43xx de4x5 dv1394 eepro100 eth1394 evbug \
@@ -2689,7 +2682,7 @@ inside() {
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    umrg "dmidecode lafilefixer localepurge ntp"
+    umrg "lafilefixer localepurge ntp"
     k_check
     end
 }
