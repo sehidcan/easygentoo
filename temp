@@ -43,8 +43,17 @@ fl() {
     mkdir -p "$(dirname ${trg_file})"
     
     if [ -e "${trg_file}" ]; then
-        [[ "${2}" == "b" ]] && cp "${trg_file}" "${trg_file}".backup
-        [[ "${3}" == "d" ]] && rm -rf "${trg_file}"
+        case ${2} in
+        b)
+            cp "${trg_file}" "${trg_file}".backup
+        ;;
+        esac
+        
+        case ${3} in
+        d)
+            rm -rf "${trg_file}"
+        ;;
+        esac
     else
         touch "${trg_file}"
     fi
@@ -426,7 +435,12 @@ inst() {
         step=""
     }
     
-    if [ "${1}" != "sync" ] && [ -n "${1}" ]; then
+    case ${1} in
+    sync)
+        [[ -e "/usr/portage/metadata/timestamp.chk" ]] && rm -rf /usr/portage/metadata/timestamp.chk &>/dev/null
+        CONFIG_PROTECT_MASK="/etc" emerge --quiet --sync &>/dev/null
+    ;;
+    *)
         fl "merge.eg" "0" "d"
         cf "a=\"${1}\""
         
@@ -439,10 +453,8 @@ inst() {
             fetch &>/dev/null &
             compile
         fi
-    elif [ "${1}" == "sync" ]; then
-        [[ -e "/usr/portage/metadata/timestamp.chk" ]] && rm -rf /usr/portage/metadata/timestamp.chk &>/dev/null
-        CONFIG_PROTECT_MASK="/etc" emerge --quiet --sync &>/dev/null
-    fi
+    ;;
+    esac
 }
 
 k_grub() {
@@ -487,7 +499,12 @@ k_grub() {
     
     [[ -n "${swap_part}" ]] && kernel_line="${kernel_line} real_resume=LABEL=${swap_label}"
     kernel_line="${kernel_line} real_root=LABEL=${root_label} udev"
-    [[ "${root_fs}" == "jfs" ]] && [[ -z "${boot_part}" ]] && kernel_line="${kernel_line} ro"
+    
+    case ${root_fs} in
+    jfs)
+        [[ -z "${boot_part}" ]] && kernel_line="${kernel_line} ro"
+    ;;
+    esac
     
     fl "grub.eg" "0" "d"
     
@@ -642,9 +659,11 @@ k_needed() {
 
         [[ ! -e "/etc/init.d/${net}" ]] && ln -s /etc/init.d/net.lo /etc/init.d/${net}
 
-        if [ "setup" == "basic" ]; then
+        case ${setup} in
+        basic)
             rc-update add ${net} default &>/dev/null
-        fi
+        ;;
+        esac
     done
     
     rc-update add acpid default &>/dev/null
@@ -944,11 +963,14 @@ k_x() {
     
     while read fontdir
     do
-        if [ "${fontdir}" == "75dpi" ] || [ "${fontdir}" == "100dpi" ] || [ "${fontdir}" == "misc" ]; then
+        case ${fontdir} in
+        75dpi|100dpi|misc)
             cf '  FontPath "/usr/share/fonts/'${fontdir}':unscaled"'
-        else
+        ;;
+        *)
             cf '  FontPath "/usr/share/fonts/'${fontdir}'"'
-        fi
+        ;;
+        esac
     done < fonts.eg
     
     cf 'EndSection'
@@ -1138,11 +1160,13 @@ k_xfce() {
     step=$(echo; eb2 "* "; eg "Emerging other Xfce packages..."; sleep 0.5s; echo)
     inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     
-    if [ "${type}" == "laptop" ]; then
+    case "${type}" in
+    laptop)
         step=$(echo; eb2 "* "; eg "Emerging packages needed for laptops..."; sleep 0.5s; echo)
         inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
         rc-update add laptop_mode default &>/dev/null
-    fi
+    ;;
+    esac
     
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Thunar"; eg "..."; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
@@ -1888,12 +1912,14 @@ create_swap_file() {
     ;;
     esac
     
-    if [ "${swap_file}" == "yes" ]; then
+    case ${swap_file} in
+    yes)
         echo; eb2 "* "; eg2 "Creating a swap file"; er " (1GB)"; sleep 0.5s
         dd if=/dev/zero of=/egswap count=2M &>/dev/null
         mkswap /egswap &>/dev/null
         swapon /egswap &>/dev/null
-    fi
+    ;;
+    esac
 }
 
 shut() {
@@ -2180,9 +2206,18 @@ inside() {
             cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
-        if [ "${setup}" == "normal" ]; then
-            [[ "${type}" == "laptop" ]] && cf 'XFCE_PLUGINS="brightness menu trash"' || cf 'XFCE_PLUGINS="menu trash"'
-        fi
+        case ${setup} in
+        normal)
+            case ${type} in
+            laptop)
+                cf 'XFCE_PLUGINS="brightness menu trash"'
+            ;;
+            pc)
+                cf 'XFCE_PLUGINS="menu trash"'
+            ;;
+            esac
+        ;;
+        esac
     cf ''
 
     echo; eb2 "* "; eg2 "Creating"; er " package.use..."; sleep 0.5s
@@ -2386,7 +2421,12 @@ inside() {
     esac
     
     k_needed
-    [[ "${setup}" == "normal" ]] && { k_x; k_nm; k_alsa; }
+    
+    case ${setup} in
+    normal)
+        k_x; k_nm; k_alsa
+    ;;
+    esac
     
     echo; eb2 "* "; eg "Creating/Updating necessary configuration files..."; sleep 1s
     refresh
@@ -2628,9 +2668,12 @@ inside() {
 
     for g in ${g_list}; do
         c=$(grep "${g}" /etc/group | cut -d: -f1)
-        if [ "${c}" == "${g}" ]; then
+        
+        case ${c} in
+        ${g})
             [[ -z "${g_e}" ]] && g_e="${g}" || g_e="${g},${g_e}"
-        fi
+        ;;
+        esac
     done
 
     useradd -m -G ${g_e} -s $(which bash) ${username}
@@ -2792,14 +2835,24 @@ report() {
         echo "No network adapters were found." >> ${rp}
     fi
     echo "" >> ${rp}
-
-    if [ "${blimit}" -gt "0" ]; then
-        echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
-    elif [ "${blimit}" == "0" ]; then
+    
+    case ${blimit} in
+    0)
         echo "No bandwidth limit is used during setup." >> ${rp}
-    fi
+    ;;
+    *)
+        echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
+    ;;
+    esac
 
-    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp}; }
+    case ${setup} in
+    basic)
+        echo "Xfce is not installed." >> ${rp}
+    ;;
+    normal)
+        echo "Xfce is installed as a desktop environment." >> ${rp}
+    ;;
+    esac
     
     echo "" >> ${rp}
     echo "Mirrors:" >> ${rp}
