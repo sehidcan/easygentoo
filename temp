@@ -334,6 +334,7 @@ inst() {
     }
     
     compile() {
+        rcount="0"
         fl "pkg.lst" "0" "0"
         while true
         do
@@ -420,10 +421,26 @@ inst() {
                         python-updater
                     ;;
                     esac
+                    rcount="0"
                 ;;
                 *)
+                    ((rcount++)))
                     rm -rf /var/tmp/portage/*$(echo ${package} | cut -c 2-)* &>/dev/null
-                    lff; refresh
+                    
+                    case ${rcount} in
+                    1)
+                        lff; refresh; timesync
+                    ;;
+                    2)
+                        python-updater
+                        perl-cleaner --reallyall
+                    ;;
+                    3)
+                        tch stop.eg
+                        echo; er "Installation failed due to compile error. Package: $(echo ${package} | cut -c 2-)."
+                        er "Easygentoo will exit now."; echo; exit 1
+                    ;;
+                    esac
                 ;;
                 esac
             fi
@@ -639,8 +656,7 @@ k_needed() {
     step=$(echo; eb2 "* "; eg "Emerging basic tools..."; echo; sleep 0.5s)
     inst "acpid bash-completion consolekit dbus localepurge net-misc/ntp sudo"
     
-    sntp -t 30 -s 0.gentoo.pool.ntp.org &>/dev/null
-    
+    timesync
     eselect bashcomp enable --global gentoo
 
     echo; eb2 "* "; eg2 "Starting services... "; er "(dbus consolekit udev)"; echo; sleep 0.5s
@@ -1222,6 +1238,10 @@ set_gcc() {
     gcc-config ${gcc_number} &>/dev/null
 }
 
+timesync() {
+    which ntpdate &>/dev/null && { echo; eb2 "* "; eg "ntpdate -b -u pool.ntp.org"; echo; ntpdate -b -u pool.ntp.org; } || { which sntp &>/dev/null && sntp -t10 pool.ntp.org &>/dev/null; }
+}
+
 refresh() {
     echo "-5" | CONFIG_PROTECT_MASK="/etc" etc-update &>/dev/null; env-update &>/dev/null; source /etc/profile &>/dev/null
     vlist
@@ -1411,7 +1431,7 @@ prepare() {
             esac
             
             echo "umount -l /dev/${part} > /dev/null 2>&1" >> format.eg
-            echo "mkfs.${fs} -L ${label} --no-indexing -f /dev/${part} > /dev/null 2>&1" >> format.eg
+            echo "mkfs.${fs} -Q -L ${label} --no-indexing -f /dev/${part} > /dev/null 2>&1" >> format.eg
         ;;
         reiserfs)
             prm="defaults,noatime"
@@ -1740,8 +1760,7 @@ get_tar() {
     a2v "mirrorlist=\"${mirrorlist}\""
     
     mirror_check
-    
-    which sntp &>/dev/null && sntp -t 30 -b pool.ntp.org &>/dev/null
+    timesync
     
     [[ -e "${lt}" ]] && rm -rf ${lt}
     
@@ -2101,10 +2120,10 @@ inside() {
     
     case ${type} in
     laptop)
-        cf 'USE="${USE} bluetooth ieee1394 irda laptop lcdfilter lm_sensors pcmcia wifi"'
+        cf 'USE="${USE} bluetooth ieee1394 irda laptop lm_sensors pcmcia wifi"'
     ;;
     pc)
-        cf 'USE="${USE} -bluetooth -ieee1394 -irda -laptop -lcdfilter -lm_sensors -pcmcia -wifi"'
+        cf 'USE="${USE} -bluetooth -ieee1394 -irda -laptop -lm_sensors -pcmcia -wifi"'
     ;;
     esac
     
