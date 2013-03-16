@@ -462,7 +462,7 @@ inst() {
         cf "a=\"${1}\""
         
         source "$(pwd)/merge.eg"
-        echo "emerge -pv ${a} 2>&1 | grep '^\['" > cmd.eg
+        [[ "${a}" == "-e system" ]] && echo "emerge -pvD ${a} 2>&1 | grep '^\['" > cmd.eg || echo "emerge -pv ${a} 2>&1 | grep '^\['" > cmd.eg
         sh cmd.eg > data.tmp; rm -rf cmd.eg
         
         if [ -n "$(grep -i '^\[ebuild' data.tmp)" ]; then
@@ -1205,7 +1205,7 @@ k_xfce() {
 k_system() {
     touch sys.eg
     step=$(echo; eb2 "* "; eg "Updating system..."; echo; sleep 0.5s)
-    inst "-De system"
+    inst "-e system"
     rm -rf sys.eg
 }
 
