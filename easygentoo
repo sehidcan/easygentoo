@@ -43,8 +43,17 @@ fl() {
     mkdir -p "$(dirname ${trg_file})"
     
     if [ -e "${trg_file}" ]; then
-        [[ "${2}" == "b" ]] && cp "${trg_file}" "${trg_file}".backup
-        [[ "${3}" == "d" ]] && rm -rf "${trg_file}"
+        case ${2} in
+        b)
+            cp "${trg_file}" "${trg_file}".backup
+        ;;
+        esac
+        
+        case ${3} in
+        d)
+            rm -rf "${trg_file}"
+        ;;
+        esac
     else
         touch "${trg_file}"
     fi
@@ -325,6 +334,7 @@ inst() {
     }
     
     compile() {
+        rcount="0"
         fl "pkg.lst" "0" "0"
         while true
         do
@@ -384,12 +394,12 @@ inst() {
                 esac
                 
                 if [ -e "sys.eg" ]; then
-                    mrg -e --oneshot --nodeps ${package}
+                    mrg -e --oneshot --nodeps ${package} || mrg -e --oneshot ${package}
                 else
                     if [ -n "$(grep ${package} ${compiled})" ]; then
-                        mrg -u --oneshot --nodeps ${package}
+                        mrg -u --oneshot --nodeps ${package} || mrg -u --oneshot ${package}
                     else
-                        mrg --oneshot --nodeps ${package}
+                        mrg --oneshot --nodeps ${package} || mrg --oneshot ${package}
                     fi
                 fi
                 
@@ -411,10 +421,26 @@ inst() {
                         python-updater
                     ;;
                     esac
+                    rcount="0"
                 ;;
                 *)
+                    ((rcount++))
                     rm -rf /var/tmp/portage/*$(echo ${package} | cut -c 2-)* &>/dev/null
-                    lff; refresh
+                    
+                    case ${rcount} in
+                    1)
+                        lff; refresh; timesync
+                    ;;
+                    2)
+                        python-updater
+                        perl-cleaner --reallyall
+                    ;;
+                    3)
+                        tch stop.eg
+                        echo; er "Installation failed due to compile error. Package: $(echo ${package} | cut -c 2-)."
+                        er "Easygentoo will exit now."; echo; exit 1
+                    ;;
+                    esac
                 ;;
                 esac
             fi
@@ -426,12 +452,17 @@ inst() {
         step=""
     }
     
-    if [ "${1}" != "sync" ] && [ -n "${1}" ]; then
+    case ${1} in
+    sync)
+        [[ -e "/usr/portage/metadata/timestamp.chk" ]] && rm -rf /usr/portage/metadata/timestamp.chk &>/dev/null
+        CONFIG_PROTECT_MASK="/etc" emerge --quiet --sync &>/dev/null
+    ;;
+    *)
         fl "merge.eg" "0" "d"
         cf "a=\"${1}\""
         
         source "$(pwd)/merge.eg"
-        echo "emerge -pv ${a} 2>&1 | grep '^\['" > cmd.eg
+        [[ "${a}" == "-e system" ]] && echo "emerge -pvD ${a} 2>&1 | grep '^\['" > cmd.eg || echo "emerge -pv ${a} 2>&1 | grep '^\['" > cmd.eg
         sh cmd.eg > data.tmp; rm -rf cmd.eg
         
         if [ -n "$(grep -i '^\[ebuild' data.tmp)" ]; then
@@ -439,10 +470,8 @@ inst() {
             fetch &>/dev/null &
             compile
         fi
-    elif [ "${1}" == "sync" ]; then
-        [[ -e "/usr/portage/metadata/timestamp.chk" ]] && rm -rf /usr/portage/metadata/timestamp.chk &>/dev/null
-        CONFIG_PROTECT_MASK="/etc" emerge --quiet --sync &>/dev/null
-    fi
+    ;;
+    esac
 }
 
 k_grub() {
@@ -487,7 +516,12 @@ k_grub() {
     
     [[ -n "${swap_part}" ]] && kernel_line="${kernel_line} real_resume=LABEL=${swap_label}"
     kernel_line="${kernel_line} real_root=LABEL=${root_label} udev"
-    [[ "${root_fs}" == "jfs" ]] && [[ -z "${boot_part}" ]] && kernel_line="${kernel_line} ro"
+    
+    case ${root_fs} in
+    jfs)
+        [[ -z "${boot_part}" ]] && kernel_line="${kernel_line} ro"
+    ;;
+    esac
     
     fl "grub.eg" "0" "d"
     
@@ -614,16 +648,15 @@ k_must() {
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dhcpcd"; eg2 " and "; er2 "gentoolkit"; eg "... "; echo; sleep 0.5s)
     inst "dhcpcd gentoolkit";
 
-    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "dmidecode" ; eg2 " and "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
-    inst "--oneshot dmidecode lafilefixer"
+    step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "lafilefixer"; eg "... "; echo; sleep 0.5s)
+    inst "lafilefixer"
 }
 
 k_needed() {
     step=$(echo; eb2 "* "; eg "Emerging basic tools..."; echo; sleep 0.5s)
     inst "acpid bash-completion consolekit dbus localepurge net-misc/ntp sudo"
     
-    sntp -t 30 -s 0.gentoo.pool.ntp.org &>/dev/null
-    
+    timesync
     eselect bashcomp enable --global gentoo
 
     echo; eb2 "* "; eg2 "Starting services... "; er "(dbus consolekit udev)"; echo; sleep 0.5s
@@ -642,9 +675,11 @@ k_needed() {
 
         [[ ! -e "/etc/init.d/${net}" ]] && ln -s /etc/init.d/net.lo /etc/init.d/${net}
 
-        if [ "setup" == "basic" ]; then
+        case ${setup} in
+        basic)
             rc-update add ${net} default &>/dev/null
-        fi
+        ;;
+        esac
     done
     
     rc-update add acpid default &>/dev/null
@@ -944,11 +979,14 @@ k_x() {
     
     while read fontdir
     do
-        if [ "${fontdir}" == "75dpi" ] || [ "${fontdir}" == "100dpi" ] || [ "${fontdir}" == "misc" ]; then
+        case ${fontdir} in
+        75dpi|100dpi|misc)
             cf '  FontPath "/usr/share/fonts/'${fontdir}':unscaled"'
-        else
+        ;;
+        *)
             cf '  FontPath "/usr/share/fonts/'${fontdir}'"'
-        fi
+        ;;
+        esac
     done < fonts.eg
     
     cf 'EndSection'
@@ -1138,11 +1176,13 @@ k_xfce() {
     step=$(echo; eb2 "* "; eg "Emerging other Xfce packages..."; sleep 0.5s; echo)
     inst "app-editors/leafpad x11-terms/xfce4-terminal x11-themes/murrine-themes xarchiver xfce4-mixer xfce4-taskmanager"
     
-    if [ "${type}" == "laptop" ]; then
+    case "${type}" in
+    laptop)
         step=$(echo; eb2 "* "; eg "Emerging packages needed for laptops..."; sleep 0.5s; echo)
         inst "xfce4-battery-plugin xfce4-power-manager laptop-mode-tools"
         rc-update add laptop_mode default &>/dev/null
-    fi
+    ;;
+    esac
     
     step=$(echo; eb2 "* "; eg2 "Emerging "; er2 "Thunar"; eg "..."; sleep 0.5s; echo)
     inst "thunar thunar-archive-plugin thunar-volman trayer"
@@ -1196,6 +1236,10 @@ set_gcc() {
     gcc-config ${gcc_number} &>/dev/null
     gcc-config ${gcc_number} &>/dev/null
     gcc-config ${gcc_number} &>/dev/null
+}
+
+timesync() {
+    which ntpdate &>/dev/null && { echo; eb2 "* "; eg "ntpdate -b -u pool.ntp.org"; echo; ntpdate -b -u pool.ntp.org; } || { which sntp &>/dev/null && sntp -t10 pool.ntp.org &>/dev/null; }
 }
 
 refresh() {
@@ -1387,7 +1431,7 @@ prepare() {
             esac
             
             echo "umount -l /dev/${part} > /dev/null 2>&1" >> format.eg
-            echo "mkfs.${fs} -L ${label} --no-indexing -f /dev/${part} > /dev/null 2>&1" >> format.eg
+            echo "mkfs.${fs} -Q -L ${label} --no-indexing -f /dev/${part} > /dev/null 2>&1" >> format.eg
         ;;
         reiserfs)
             prm="defaults,noatime"
@@ -1451,20 +1495,20 @@ prepare() {
         blimit)
             value="0"
         ;;
-        keymap)
-            value="us"
-        ;;
         domainname)
             value="easygentoo"
         ;;
-        username)
-            value="owner"
+        grub)
+            value="$(echo ${root_part} | sed s:[0-9].*::)"
         ;;
         hostname)
             value="freshinstall"
         ;;
-        rootpass)
-            value="toor"
+        keymap)
+            value="us"
+        ;;
+        username)
+            value="owner"
         ;;
         userpass)
             value="resu"
@@ -1472,11 +1516,14 @@ prepare() {
         root)
             echo; er "  /root partition is not specified in profile. Please change your profile and start again."; echo; exit 1
         ;;
+        rootpass)
+            value="toor"
+        ;;
         setup)
             value="basic"
         ;;
-        grub)
-            value="$(echo ${root_part} | sed s:[0-9].*::)"
+        type)
+            value="pc"
         ;;
         windows)
             value=""
@@ -1565,7 +1612,7 @@ prepare() {
 
     chmod +x format.eg; chmod +x mount.eg
     
-    settings="arch blimit domainname grub hostname keymap setup rootpass userpass username windows"
+    settings="arch blimit domainname grub hostname keymap rootpass setup type userpass username windows"
 
     for s in ${settings}
     do
@@ -1640,6 +1687,16 @@ prepare() {
                 ;;
                 esac
             ;;
+            type)
+                case ${value} in
+                laptop|pc)
+                    e="x"
+                ;;
+                *)
+                    default_value "${s}"
+                ;;
+                esac
+            ;;
             esac
         fi
         
@@ -1703,8 +1760,7 @@ get_tar() {
     a2v "mirrorlist=\"${mirrorlist}\""
     
     mirror_check
-    
-    which sntp &>/dev/null && sntp -t 30 -b pool.ntp.org &>/dev/null
+    timesync
     
     [[ -e "${lt}" ]] && rm -rf ${lt}
     
@@ -1875,12 +1931,14 @@ create_swap_file() {
     ;;
     esac
     
-    if [ "${swap_file}" == "yes" ]; then
+    case ${swap_file} in
+    yes)
         echo; eb2 "* "; eg2 "Creating a swap file"; er " (1GB)"; sleep 0.5s
         dd if=/dev/zero of=/egswap count=2M &>/dev/null
         mkswap /egswap &>/dev/null
         swapon /egswap &>/dev/null
-    fi
+    ;;
+    esac
 }
 
 shut() {
@@ -1894,6 +1952,7 @@ inside() {
     net_watch &
     
     echo; eg "  !!--Chroot--!!"
+    timesync
     
     fl "/etc/etc-update.conf" "0" "0"
     
@@ -1995,15 +2054,6 @@ inside() {
     
     echo; k_portage; k_must
     
-    case $(dmidecode -t 3 | awk '/Type: / {print $2}') in
-    Notebook|Netbook|Laptop)
-        a2v "type=\"laptop\""
-    ;;
-    *)
-        a2v "type=\"pc\""
-    ;;
-    esac
-    
     fl "/etc/locale.gen" "0" "0"
     
     case ${keymap} in
@@ -2053,16 +2103,18 @@ inside() {
     cf 'USE="${USE} btrfs fat hfs inotify jfs nfs ntfs reiser4 reiserfs sysfs xfs"'
     cf ''
     cf '#base system'
-    cf 'USE="${USE} acl acpi bash-completion berkdb bidi bzip2 consolekit css '
-    cf '    dbus gnutls kmod lzo nptl pam policykit profile python rar readline '
-    cf '    sqlite sqlite3 symlink truetype udev unicode usb vdpau zlib"'
+    cf 'USE="${USE} acl acpi bash-completion berkdb bidi bzip2 consolekit crypt css dbus '
+    cf '    gnutls ipv6 kmod lzo ncurses nls nptl pam policykit profile rar readline '
+    cf '    sqlite sqlite3 ssl symlink tcpd truetype udev unicode usb vdpau zlib"'
+    cf ''
+    cf '#toolchain'
+    cf 'USE="${USE} fortran mudflap openmp"'
     cf ''
     cf '#disabled'
     cf 'USE="${USE} -apm -arts -avahi -beagle -branding -cpudetection -debug -dhclient -doc '
-    cf '    -dso -eds -esd -evo -git -gdbm -gphoto2 -gpm -hal -hunspell -ieee1394 -introspection '
-    cf '    -ipv6 -java -joystick -kdeprefix -kerberos -ldap -lm_sensors -minimal -mono '
-    cf '    -mysql -ncurses -nss -openexr -oss -perl -spell -static -static-libs '
-    cf '    -xscreensaver -zemberek"'
+    cf '    -dso -eds -esd -evo -git -gdbm -gphoto2 -gpm -hal -hunspell -introspection -java '
+    cf '    -joystick -kdeprefix -kerberos -ldap -minimal -mono -mysql -nss -openexr '
+    cf '    -oss -perl -spell -static -static-libs -xscreensaver -zemberek"'
     cf ''
     cf '#printer'
     cf 'USE="${USE} -cups -foomaticdb -scanner"'
@@ -2071,10 +2123,10 @@ inside() {
     
     case ${type} in
     laptop)
-        cf 'USE="${USE} bluetooth ieee1394 irda laptop lcdfilter lm_sensors pcmcia wifi"'
+        cf 'USE="${USE} bluetooth ieee1394 irda laptop lm_sensors pcmcia wifi"'
     ;;
     pc)
-        cf 'USE="${USE} -bluetooth -ieee1394 -irda -laptop -lcdfilter -lm_sensors -pcmcia -wifi"'
+        cf 'USE="${USE} -bluetooth -ieee1394 -irda -laptop -lm_sensors -pcmcia -wifi"'
     ;;
     esac
     
@@ -2132,8 +2184,17 @@ inside() {
     ;;
     esac
     
-    cf 'VIDEO_CARDS="vesa"'
-    cf 'INPUT_DEVICES="evdev"'
+    cf 'VIDEO_CARDS="dummy fbdev vesa"'
+    
+    case ${type} in
+    pc)
+        cf 'INPUT_DEVICES="evdev"'
+    ;;
+    laptop)
+        cf 'INPUT_DEVICES="evdev synaptics"'
+    ;;
+    esac
+    
         case ${keymap} in
         br)
             cf 'LINGUAS="pt_BR"'
@@ -2167,9 +2228,18 @@ inside() {
             cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
-        if [ "${setup}" == "normal" ]; then
-            [[ "${type}" == "laptop" ]] && cf 'XFCE_PLUGINS="brightness menu trash"' || cf 'XFCE_PLUGINS="menu trash"'
-        fi
+        case ${setup} in
+        normal)
+            case ${type} in
+            laptop)
+                cf 'XFCE_PLUGINS="brightness menu trash"'
+            ;;
+            pc)
+                cf 'XFCE_PLUGINS="menu trash"'
+            ;;
+            esac
+        ;;
+        esac
     cf ''
 
     echo; eb2 "* "; eg2 "Creating"; er " package.use..."; sleep 0.5s
@@ -2373,7 +2443,12 @@ inside() {
     esac
     
     k_needed
-    [[ "${setup}" == "normal" ]] && { k_x; k_nm; k_alsa; }
+    
+    case ${setup} in
+    normal)
+        k_x; k_nm; k_alsa
+    ;;
+    esac
     
     echo; eb2 "* "; eg "Creating/Updating necessary configuration files..."; sleep 1s
     refresh
@@ -2615,9 +2690,12 @@ inside() {
 
     for g in ${g_list}; do
         c=$(grep "${g}" /etc/group | cut -d: -f1)
-        if [ "${c}" == "${g}" ]; then
+        
+        case ${c} in
+        ${g})
             [[ -z "${g_e}" ]] && g_e="${g}" || g_e="${g},${g_e}"
-        fi
+        ;;
+        esac
     done
 
     useradd -m -G ${g_e} -s $(which bash) ${username}
@@ -2669,7 +2747,7 @@ inside() {
     
     [[ ! -e /root/.bash_profile ]] && cp /etc/skel/.bash_profile /root/
 
-    umrg "dmidecode lafilefixer localepurge ntp"
+    umrg "lafilefixer localepurge ntp"
     k_check
     end
 }
@@ -2779,14 +2857,24 @@ report() {
         echo "No network adapters were found." >> ${rp}
     fi
     echo "" >> ${rp}
-
-    if [ "${blimit}" -gt "0" ]; then
-        echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
-    elif [ "${blimit}" == "0" ]; then
+    
+    case ${blimit} in
+    0)
         echo "No bandwidth limit is used during setup." >> ${rp}
-    fi
+    ;;
+    *)
+        echo "Bandwidth limit used during setup: ${blimit} KB/s" >> ${rp}
+    ;;
+    esac
 
-    [[ "${setup}" == "normal" ]] && { echo "Xfce is installed as a desktop environment." >> ${rp}; }
+    case ${setup} in
+    basic)
+        echo "Xfce is not installed." >> ${rp}
+    ;;
+    normal)
+        echo "Xfce is installed as a desktop environment." >> ${rp}
+    ;;
+    esac
     
     echo "" >> ${rp}
     echo "Mirrors:" >> ${rp}

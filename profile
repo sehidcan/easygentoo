@@ -31,6 +31,9 @@ arch             i686
 ## grub          none
 grub             hda
 
+## type          computer type (laptop or pc) - default: pc
+type             laptop
+
 ## setup         enable/disable audio/video codec USE flags (disabled for basic, enabled for normal) - default: basic
 setup            normal
 
