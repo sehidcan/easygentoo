@@ -584,59 +584,23 @@ k_kernel() {
     
     echo; eg2 "  Creating kernel config"; eg "..."; echo; sleep 0.5s
     
-    case $arch in
-    i686)
-        cp /usr/src/linux/arch/x86/configs/i386_defconfig easygentoo.config
-    ;;
-    amd64)
-        cp /usr/src/linux/arch/x86/configs/x86_64_defconfig easygentoo.config
-    ;;
-    esac
-    
-    case ${type} in
-    laptop)
-        get_files "https://raw.github.com/shdcn/easygentoo/master/laptop.config"
-        mv laptop.config temp.config
-    ;;
-    pc)
-        get_files "https://raw.github.com/shdcn/easygentoo/master/pc.config"
-        mv pc.config temp.config
-    ;;
-    esac
+    get_files "https://raw.github.com/shdcn/easygentoo/master/easygentoo.config"
     
     fl "easygentoo.config" "0" "0"
     
-    while read cfg
-    do
-        case ${cfg} in
-        CONFIG_64BIT*)
-            case ${arch} in
-            i686)
-                cfg="CONFIG_64BIT=n"
-            ;;
-            amd64)
-                cfg="CONFIG_64BIT=y"
-            ;;
-            esac
-        ;;
-        CONFIG_FAT_DEFAULT_IOCHARSET*)
-            case ${keymap} in
-            trq|trf)
-                cfg="CONFIG_64BIT=iso8859-9"
-            ;;
-            br|us)
-                cfg="CONFIG_64BIT=iso8859-1"
-            ;;
-            esac
-        ;;
-        esac
-        
-        avoid_dup_kernel "${cfg}"
-    done < temp.config
+    case ${arch} in
+    i686)
+        avoid_dup_kernel "CONFIG_64BIT=n"
+    ;;
+    amd64)
+        avoid_dup_kernel "CONFIG_64BIT=y"
+    ;;
+    esac
     
     [[ ! -d "/etc/kernels" ]] && mkdir -p /etc/kernels
 
     cp easygentoo.config /etc/kernels
+    
     echo; eb2 "* "; eg2 "Compiling kernel... "; er "(genkernel)"; echo; sleep 0.5s
     genkernel --bootdir=/boot --bootloader=grub --disklabel --install --kernel-config=/etc/kernels/easygentoo.config --kernname=${eg} --makeopts=-j${core} --no-mountboot --postclear --save-config all
     
