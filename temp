@@ -2628,6 +2628,8 @@ inside() {
     ;;
     esac
     
+    echo 'LC_COLLATE="C"' >> /etc/env.d/02locale
+    
     fl "/etc/conf.d/consolefont" "0" "0"
     
     case ${keymap} in
