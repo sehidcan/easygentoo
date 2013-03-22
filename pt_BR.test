@@ -2113,8 +2113,6 @@ inside() {
     
     echo; k_portage; k_must
     
-    a2v "type=\"laptop\""
-    
     fl "/etc/locale.gen" "0" "0"
     
     case ${keymap} in
