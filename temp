@@ -1722,7 +1722,7 @@ get_tar() {
         mirrorlist="http://ftp.linux.org.tr/gentoo ftp://ftp.linux.org.tr/gentoo ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
     ;;
     br|us)
-        mirrorlist="ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://gentoo.supp.name http://portage.org.ua"
+        mirrorlist="ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://gentoo.supp.name"
     ;;
     esac
     
@@ -1731,36 +1731,49 @@ get_tar() {
     mirror_check
     timesync
     
-    [[ -e "${lt}" ]] && rm -rf ${lt}
+    # [[ -e "${lt}" ]] && rm -rf ${lt}
     
-    echo; eb2 "* "; eg "Getting latest tarball name..."; sleep 1s
+    # echo; eb2 "* "; eg "Getting latest tarball name..."; sleep 1s
+    
+    # case ${arch} in
+    # i686)
+        # get_files "${mirror}/releases/x86/autobuilds/${lt}"
+    # ;;
+    # amd64)
+        # get_files "${mirror}/releases/amd64/autobuilds/${lt}"
+    # ;;
+    # esac
+    
+    # sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
+    
+    # tarball="$(grep -o stage3-${arch}-[0-9]*.tar.bz2 ${lt})"
+    # tardir="$(grep ${tarball} ${lt})"
+    
+    # a2v "tarball=\"${tarball}\""
+    
+    # en2 "  Latest tarball:"; ey "  ${tarball}"; sleep 1s
+    
+    # case ${arch} in
+    # i686)
+        # t_int="${mirror}/releases/x86/autobuilds/${tardir}"; t_dig="${t_int}.DIGESTS"
+    # ;;
+    # amd64)
+        # t_int="${mirror}/releases/amd64/autobuilds/${tardir}"; t_dig="${t_int}.DIGESTS"
+    # ;;
+    # esac
     
     case ${arch} in
     i686)
-        get_files "${mirror}/releases/x86/autobuilds/${lt}"
+        tarball="stage3-i686-20130305.tar.bz2"
+        t_int="http://gentoo.supp.name/releases/x86/autobuilds/20130305/default/20130305/stage3-i686-20130305.tar.bz2"
     ;;
     amd64)
-        get_files "${mirror}/releases/amd64/autobuilds/${lt}"
+        tarball="stage3-amd64-20130321.tar.bz2"
+        t_int="http://gentoo.supp.name/releases/amd64/autobuilds/20130321/default/20130321/stage3-amd64-20130321.tar.bz2"
     ;;
     esac
     
-    sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
-    
-    tarball="$(grep -o stage3-${arch}-[0-9]*.tar.bz2 ${lt})"
-    tardir="$(grep ${tarball} ${lt})"
-    
-    a2v "tarball=\"${tarball}\""
-    
-    en2 "  Latest tarball:"; ey "  ${tarball}"; sleep 1s
-    
-    case ${arch} in
-    i686)
-        t_int="${mirror}/releases/x86/autobuilds/${tardir}"; t_dig="${t_int}.DIGESTS"
-    ;;
-    amd64)
-        t_int="${mirror}/releases/amd64/autobuilds/${tardir}"; t_dig="${t_int}.DIGESTS"
-    ;;
-    esac
+    t_dig="${t_int}.DIGESTS"
     
     check="x"
     while [ "${check}" != "ok" ]
