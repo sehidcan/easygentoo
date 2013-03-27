@@ -661,9 +661,11 @@ k_needed() {
 }
 
 k_portage() {
-    step=$(echo; eb2 "* "; eg2 "Updating "; er2 "portage"; eg "... "; sleep 0.5s)
+	step=$(echo; eb2 "* "; eg2 "Updating "; er2 "portage"; eg "... "; sleep 0.5s)
     rm -rf /etc/make.profile
-
+	
+	echo "rm make.profile sonrasi, k_portage basi"
+	
     case ${setup} in
     basic)
         case ${kw} in
@@ -687,7 +689,10 @@ k_portage() {
     ;;
     esac
     
+	echo ${p_num}
+	echo "eselect oncesi"
     eselect profile set "${p_num}"
+	echo "eselect sonrasi"
     
     eb2 "* "; eg "emerge --sync (this may take a while)"
     inst "sync"
@@ -1993,13 +1998,16 @@ inside() {
     mkdir -p /etc/portage/env/dev-db
     mkdir -p /etc/portage/env/www-client
     mkdir -p /etc/portage/env/net-libs
-    
+    echo "mkdir sonrasi"
+	
     fl "/etc/portage/env/O3-cflags" "0" "d"
     cf "CFLAGS=\"-march=native -O3 -pipe\""
     cf 'CXXFLAGS="${CFLAGS}"'
     
     ln -sf /etc/portage/env/O3-cflags /etc/portage/env/dev-lang/python &>/dev/null
+	echo "py sonrasi"
     ln -sf /etc/portage/env/O3-cflags /etc/portage/env/dev-db/sqlite &>/dev/null
+	echo "sq sonrasi"
     
     fl "/etc/portage/env/firefox-cflags" "0" "d"
     cf "CFLAGS=\"-march=native -Os -pipe -fomit-frame-pointer\""
@@ -2007,13 +2015,17 @@ inside() {
     cf 'LDFLAGS="${LDFLAGS} -Bdirect -Wl,-z,now"'
     
     ln -sf /etc/portage/env/firefox-cflags /etc/portage/env/www-client/firefox &>/dev/null
-    
+    echo "fox sonrasi"
+	
     fl "/etc/portage/env/xulrunner-cflags" "0" "d"
     cf "CFLAGS=\"-march=native -O2 -pipe -fomit-frame-pointer\""
     cf 'CXXFLAGS="${CFLAGS}"'
     cf 'LDFLAGS="${LDFLAGS} -Bdirect -Wl,-z,now"'
     
     ln -sf /etc/portage/env/xulrunner-cflags /etc/portage/env/net-libs/xulrunner &>/dev/null
+    echo "xul sonrasi"
+	
+	echo "k_portage oncesi"
     
     echo; k_portage; k_must
     
