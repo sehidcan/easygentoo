@@ -41,38 +41,20 @@ Many successful installations were made. Hope it becomes a time-saver
 for you. Happy compiling!
 
 *** IMPORTANT NOTES ***
-- Easy Gentoo doesn't do partitioning, you need to do that by yourself.
-It formats and mounts your selection of existing partitions.
-- Using a capable intallation media which has more filesystem utilities,
-Easy Gentoo can format, mount, configure partitions for these filesystems:
-"btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
-- Localization is based on your "keymap". "us" is for English,
-"br" is for Brazilian, "trq" and "trf" are for Turkish.
-- A temporary swap file with 1 GB size is created as a precaution if root
-partition is bigger than 8 GB
-- There are two install types;
-basic:   doesn't include X,Gdm,Xfce,Alsa,NetworkManager
-normal:  includes X,Gdm,Xfce,Alsa,NetworkManager
-base system configuration is the same for both
-- Easy Gentoo needs an ethernet connection to operate, wireless connection
-is not an option. Because when connection is lost, reconnection attemps
-are based on eth* names. (ex. dhcpcd eth0)
-- If the host computer is a laptop, some USE flag changes and additional
-package merges are made (these have nothing to do with wireless)
+- Easy Gentoo doesn't do partitioning, you need to do that by yourself. It formats and mounts your selection of existing partitions.
+- Using a capable intallation media which has more filesystem utilities, Easy Gentoo can format, mount, configure partitions for these filesystems: "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
+- Localization is based on your "keymap". "us" is for English, "br" is for Brazilian, "trq" and "trf" are for Turkish.
+- A temporary swap file with 1 GB size is created as a precaution if root partition is bigger than 8 GB
+- There are two install types; basic:   doesn't include X,Gdm,Xfce,Alsa,NetworkManager,  normal:  includes X,Gdm,Xfce,Alsa,NetworkManager. Base system configuration is the same for both.
+- Easy Gentoo needs an ethernet connection to operate, wireless connection is not an option. Because when connection is lost, reconnection attemps are based on eth* names. (ex. dhcpcd eth0)
+- If the host computer is a laptop, some USE flag changes and additional package merges are made (these have nothing to do with wireless)
 - Stable packages are used
 - Based on a stage3 tarball (latest one)
 - CFLAGS="-march=native -O2 -pipe"
 - LDFLAGS="-Wl,-O1 -Wl,--as-needed -Wl,--sort-common -Wl,--hash-style=gnu"
-- Mirrors for Turkish users:
-http://ftp.linux.org.tr/gentoo 
-ftp://ftp.linux.org.tr/gentoo 
-ftp://mirrors.linuxant.fr/distfiles.gentoo.org
-- Mirrors for other users:
-ftp://mirrors.linuxant.fr/distfiles.gentoo.org
-http://gentoo.supp.name
-http://portage.org.ua
-- Portage profile is "${arch}/13.0/ for basic install"
-and "${arch}/13.0/desktop for normal install"
+- Mirrors for Turkish users: http://ftp.linux.org.tr/gentoo   ftp://ftp.linux.org.tr/gentoo   ftp://mirrors.linuxant.fr/distfiles.gentoo.org
+- Mirrors for other users: ftp://mirrors.linuxant.fr/distfiles.gentoo.org   http://gentoo.supp.name   http://portage.org.ua
+- Portage profile is "${arch}/13.0/ for basic install" and "${arch}/13.0/desktop for normal install"
 - Kernel has lots of drivers activated to help to get an error free first boot
 - Grub legacy is used, not Grub2
 - No system logger and no cron included
@@ -103,32 +85,35 @@ https://github.com/shdcn/easygentoo/blob/master/profile
 sh easygentoo
 
 *** Steps for basic install ***
-1- Check if necessary tools/commands are available to continue
-2- Format partitions
-3- Mount partitions
-4- Check mirrors
-5- Download and extract latest stage3 tarball and portage snapshot
-6- Continue inside chroot
-7- Create a temporary make.conf
-8- Emerge portage and some tools
-9- Create locale.gen
-10- Update make.conf and create package.use
-11- Do a controlled "emerge -e system"
-12- Kernel compilation (genkernel) with lots of needed settings/drivers
-13- Emerge grub and create grub.conf
-*** Steps for normal install ***
---- Emerge xorg-server and create xorg.conf
---- Emerge and configure Xfce
---- Emerge and configure Gdm Login Manager
---- Configure evdev
---- Emerge NetworkManager
---- Emerge and configure Alsa
-14- Create/update configuration files (localtime, keymaps, hostname, etc)
-15- Change locale based on keymap
-16- Change root password and create user
-17- Update /etc/sudoers and .bashrc
-18- Unmerge unnecessary packages and do "emerge -uDN world"
-19- Purge unnecessary man pages etc. (localepurge)
-20- Create a small report about whole process.
-21- Delete temporary files that were created by script
-22- Shutdown computer
+- Check if necessary tools/commands are available to continue
+- Format partitions
+- Mount partitions
+- Check mirrors
+- Download and extract latest stage3 tarball and portage snapshot
+- Continue inside chroot
+- Create a temporary make.conf
+- Emerge portage and some tools
+- Create locale.gen
+- Update make.conf and create package.use
+- Do a controlled "emerge -e system"
+- Kernel compilation (genkernel) with lots of needed settings/drivers
+- Emerge grub and create grub.conf
+################################
+### Steps for normal install ###
+# Emerge xorg-server and create xorg.conf
+# Emerge and configure Xfce
+# Emerge and configure Gdm Login Manager
+# Configure evdev
+# Emerge NetworkManager
+# Emerge and configure Alsa
+### End of normal install steps ###
+###################################
+- Create/update configuration files (localtime, keymaps, hostname, etc)
+- Change locale based on keymap
+- Change root password and create user
+- Update /etc/sudoers and .bashrc
+- Unmerge unnecessary packages and do "emerge -uDN world"
+- Purge unnecessary man pages etc. (localepurge)
+- Create a small report about whole process.
+- Delete temporary files that were created by script
+- Shutdown computer
