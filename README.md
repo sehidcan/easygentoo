@@ -75,9 +75,13 @@ for you. Happy compiling!
 *** How to use ***
 - Boot from an installation media (ex. Gentoo Minimal Install CD)
 - execute these commands:
+
 wget https://raw.github.com/shdcn/easygentoo/master/easygentoo
+
 chmod +x easygentoo
+
 chmod 755 easygentoo
+
 - create a profile in the same directory where script is placed
 for more information on profile please read:
 https://github.com/shdcn/easygentoo/blob/master/profile
