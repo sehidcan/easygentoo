@@ -98,14 +98,18 @@ sh easygentoo
 - Do a controlled "emerge -e system"
 - Kernel compilation (genkernel) with lots of needed settings/drivers
 - Emerge grub and create grub.conf
+
 *** Steps for normal install ***
+
 - Emerge xorg-server and create xorg.conf
 - Emerge and configure Xfce
 - Emerge and configure Gdm Login Manager
 - Configure evdev
 - Emerge NetworkManager
 - Emerge and configure Alsa
+
 *** End of normal install steps ***
+
 - Create/update configuration files (localtime, keymaps, hostname, etc)
 - Change locale based on keymap
 - Change root password and create user
