@@ -195,7 +195,7 @@ mirror_check() {
     for mrr in ${mirrorlist}
     do
         # Trimming mirror name. Ex. http://gentoo.kiev.ua/ftp -->> gentoo.kiev.ua
-        [[ "$(ping -nc3 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { echo "${mrr}"; rm -rf ${lt}; get_files "${mrr}/releases/x86/autobuilds/${lt}"; rm -rf ${lt}; get_files "${mrr}/releases/amd64/autobuilds/${lt}"; }
+        [[ "$(ping -nc3 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { echo "${mrr} x86"; rm -rf ${lt}; get_files "${mrr}/releases/x86/autobuilds/${lt}"; echo "${mrr} amd64"; rm -rf ${lt}; get_files "${mrr}/releases/amd64/autobuilds/${lt}"; }
     done
     
     echo; eg "Check it all :)"; read key; read key
