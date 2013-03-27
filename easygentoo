@@ -1699,7 +1699,7 @@ get_tar() {
         mirrorlist="http://ftp.linux.org.tr/gentoo ftp://ftp.linux.org.tr/gentoo ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
     ;;
     br|us)
-        mirrorlist="ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://gentoo.supp.name http://portage.org.ua"
+        mirrorlist="ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://gentoo.supp.name"
     ;;
     esac
     
