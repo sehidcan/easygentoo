@@ -52,8 +52,14 @@ for you. Happy compiling!
 - Based on a stage3 tarball (latest one)
 - CFLAGS="-march=native -O2 -pipe"
 - LDFLAGS="-Wl,-O1 -Wl,--as-needed -Wl,--sort-common -Wl,--hash-style=gnu"
-- Mirrors for Turkish users: http://ftp.linux.org.tr/gentoo   ftp://ftp.linux.org.tr/gentoo   ftp://mirrors.linuxant.fr/distfiles.gentoo.org
-- Mirrors for other users: ftp://mirrors.linuxant.fr/distfiles.gentoo.org   http://gentoo.supp.name   http://portage.org.ua
+- Mirrors for Turkish users:
+
+http://ftp.linux.org.tr/gentoo   ftp://ftp.linux.org.tr/gentoo   ftp://mirrors.linuxant.fr/distfiles.gentoo.org
+
+- Mirrors for other users:
+
+ftp://mirrors.linuxant.fr/distfiles.gentoo.org   http://gentoo.supp.name   http://portage.org.ua
+
 - Portage profile is "${arch}/13.0/ for basic install" and "${arch}/13.0/desktop for normal install"
 - Kernel has lots of drivers activated to help to get an error free first boot
 - Grub legacy is used, not Grub2
@@ -73,7 +79,7 @@ for you. Happy compiling!
 - Compile list (to check if your 'must have' ones are installed)
 
 *** How to use ***
-- Boot from an installation media (ex. Gentoo Minimal Install CD)
+- boot from an installation media (ex. Gentoo Minimal Install CD)
 - execute these commands:
 
 wget https://raw.github.com/shdcn/easygentoo/master/easygentoo
@@ -84,8 +90,11 @@ chmod 755 easygentoo
 
 - create a profile in the same directory where script is placed
 for more information on profile please read:
+
 https://github.com/shdcn/easygentoo/blob/master/profile
+
 - start script:
+
 sh easygentoo
 
 *** Steps for basic install ***
