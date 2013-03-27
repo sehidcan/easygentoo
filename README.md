@@ -42,23 +42,23 @@ for you. Happy compiling!
 
 *** IMPORTANT NOTES ***
 - Easy Gentoo doesn't do partitioning, you need to do that by yourself.
-  It formats and mounts your selection of existing partitions.
+	It formats and mounts your selection of existing partitions.
 - Using a capable intallation media which has more filesystem utilities,
-  Easy Gentoo can format, mount, configure partitions for these filesystems:
-  "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
+	Easy Gentoo can format, mount, configure partitions for these filesystems:
+	"btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
 - Localization is based on your "keymap". "us" is for English,
-  "br" is for Brazilian, "trq" and "trf" are for Turkish.
+	"br" is for Brazilian, "trq" and "trf" are for Turkish.
 - A temporary swap file with 1 GB size is created as a precaution if root
-  partition is bigger than 8 GB
+	partition is bigger than 8 GB
 - There are two install types;
-  basic:   doesn't include X,Gdm,Xfce,Alsa,NetworkManager
-  normal:  includes X,Gdm,Xfce,Alsa,NetworkManager
-  base system configuration is the same for both
+	basic:   doesn't include X,Gdm,Xfce,Alsa,NetworkManager
+	normal:  includes X,Gdm,Xfce,Alsa,NetworkManager
+	base system configuration is the same for both
 - Easy Gentoo needs an ethernet connection to operate, wireless connection
-  is not an option. Because when connection is lost, reconnection attemps
-  are based on eth* names. (ex. dhcpcd eth0)
+	is not an option. Because when connection is lost, reconnection attemps
+	are based on eth* names. (ex. dhcpcd eth0)
 - If the host computer is a laptop, some USE flag changes and additional
-  package merges are made (these have nothing to do with wireless)
+	package merges are made (these have nothing to do with wireless)
 - Stable packages are used
 - Based on a stage3 tarball (latest one)
 - CFLAGS="-march=native -O2 -pipe"
@@ -67,12 +67,12 @@ for you. Happy compiling!
 	http://ftp.linux.org.tr/gentoo 
 	ftp://ftp.linux.org.tr/gentoo 
 	ftp://mirrors.linuxant.fr/distfiles.gentoo.org
-  Mirrors for other users:
+- Mirrors for other users:
 	ftp://mirrors.linuxant.fr/distfiles.gentoo.org
 	http://gentoo.supp.name
 	http://portage.org.ua
 - Portage profile is "${arch}/13.0/ for basic install"
-  and "${arch}/13.0/desktop for normal install"
+	and "${arch}/13.0/desktop for normal install"
 - Kernel has lots of drivers activated to help to get an error free first boot
 - Grub legacy is used, not Grub2
 - No system logger and no cron included
@@ -93,25 +93,25 @@ for you. Happy compiling!
 *** How to use ***
 - Boot from an installation media (ex. Gentoo Minimal Install CD)
 - execute these commands:
-  wget https://raw.github.com/shdcn/easygentoo/master/easygentoo
-  chmod +x easygentoo
-  chmod 755 easygentoo
+	wget https://raw.github.com/shdcn/easygentoo/master/easygentoo
+	chmod +x easygentoo
+	chmod 755 easygentoo
 - create a profile in the same directory where script is placed
-  for more information on profile please read:
-  https://github.com/shdcn/easygentoo/blob/master/profile
+	for more information on profile please read:
+	https://github.com/shdcn/easygentoo/blob/master/profile
 - start script:
-  sh easygentoo
+	sh easygentoo
 
 *** Steps for basic install ***
- 1- Check if necessary tools/commands are available to continue
- 2- Format partitions
- 3- Mount partitions
- 4- Check mirrors
- 5- Download and extract latest stage3 tarball and portage snapshot
- 6- Continue inside chroot
- 7- Create a temporary make.conf
- 8- Emerge portage and some tools
- 9- Create locale.gen
+1- Check if necessary tools/commands are available to continue
+2- Format partitions
+3- Mount partitions
+4- Check mirrors
+5- Download and extract latest stage3 tarball and portage snapshot
+6- Continue inside chroot
+7- Create a temporary make.conf
+8- Emerge portage and some tools
+9- Create locale.gen
 10- Update make.conf and create package.use
 11- Do a controlled "emerge -e system"
 12- Kernel compilation (genkernel) with lots of needed settings/drivers
