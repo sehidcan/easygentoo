@@ -668,26 +668,24 @@ k_portage() {
     basic)
         case ${kw} in
         amd64)
-            p_num="$(eselect profile list | tr -d '[]' | awk '/amd64\/13.0$/ {print $1}')"
+            eselect profile set default/linux/amd64/13.0
         ;;
         x86)
-            p_num="$(eselect profile list | tr -d '[]' | awk '/x86\/13.0$/ {print $1}')"
+            eselect profile set default/linux/x86/13.0
         ;;
         esac
     ;;
     normal)
         case ${kw} in
         amd64)
-            p_num="$(eselect profile list | tr -d '[]' | awk '/amd64\/13.0\/desktop$/ {print $1}')"
+            eselect profile set default/linux/amd64/13.0/desktop
         ;;
         x86)
-            p_num="$(eselect profile list | tr -d '[]' | awk '/x86\/13.0\/desktop$/ {print $1}')"
+            eselect profile set default/linux/x86/13.0/desktop
         ;;
         esac
     ;;
     esac
-    
-    eselect profile set "${p_num}"
     
     eb2 "* "; eg "emerge --sync (this may take a while)"
     inst "sync"
@@ -1180,26 +1178,10 @@ k_check() {
 }
 
 set_gcc() {
-    gcc_version="$(emerge -pq gcc | sed -e 's:.*sys-devel/gcc-::' -e 's: .*::')"
-    gcc_number=$(gcc-config -l | tr '[]' ' ' | awk '/'${gcc_version}'/ { print $1 }')
-    
-    if [ -z "${gcc_number}" ]; then
-        gcc_number="$(gcc-config -l | grep -v '*' | tr '[]' ' ' | awk '{ print $1 }')"
-    else
-        case "${gcc_number}" in
-        1|2)
-            e="x"
-        ;;
-        *)
-            gcc_number="2"
-        ;;
-        esac
-    fi
-    
-    echo
-    gcc-config ${gcc_number} &>/dev/null
-    gcc-config ${gcc_number} &>/dev/null
-    gcc-config ${gcc_number} &>/dev/null
+    gcc-config -l | awk '{print $2}' > gcc.lst
+    gcc_latest="$(sort -r gcc.lst | sed q)"
+    gcc-config ${gcc_latest} &>/dev/null || gcc-config ${gcc_latest} &>/dev/null
+    rm -rf gcc.lst
 }
 
 timesync() {
@@ -1726,37 +1708,52 @@ get_tar() {
     mirror_check
     timesync
     
-    [[ -e "${lt}" ]] && rm -rf ${lt}
+    # [[ -e "${lt}" ]] && rm -rf ${lt}
     
-    echo; eb2 "* "; eg "Getting latest tarball name..."; sleep 1s
+    # echo; eb2 "* "; eg "Getting latest tarball name..."; sleep 1s
+    
+    # case ${arch} in
+    # i686)
+        # get_files "${mirror}/releases/x86/autobuilds/${lt}"
+    # ;;
+    # amd64)
+        # get_files "${mirror}/releases/amd64/autobuilds/${lt}"
+    # ;;
+    # esac
+    
+    # sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
+    
+    # ext=".tar.bz2"
+    # tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
+    # tarball="stage3-${arch}-${tardate}${ext}"
+    
+    # a2v "tarball=\"${tarball}\""
+    
+    # en2 "  Latest tarball:"; ey "  ${tarball}"; sleep 1s
+    
+    # case ${arch} in
+    # i686)
+        # t_int="${mirror}/releases/x86/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
+    # ;;
+    # amd64)
+        # t_int="${mirror}/releases/amd64/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
+    # ;;
+    # esac
+    
+    # Temporary fix for tarball download issue
     
     case ${arch} in
     i686)
-        get_files "${mirror}/releases/x86/autobuilds/${lt}"
+        tarball="stage3-i686-20130305.tar.bz2"
+        t_int="${mirror}/releases/x86/autobuilds/20130305/default/20130305/${tarball}"
     ;;
     amd64)
-        get_files "${mirror}/releases/amd64/autobuilds/${lt}"
+        tarball="stage3-amd64-20130321.tar.bz2"
+        t_int="${mirror}/releases/amd64/autobuilds/20130321/default/20130321/${tarball}"
     ;;
     esac
     
-    sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
-    
-    ext=".tar.bz2"
-    tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
-    tarball="stage3-${arch}-${tardate}${ext}"
-    
-    a2v "tarball=\"${tarball}\""
-    
-    en2 "  Latest tarball:"; ey "  ${tarball}"; sleep 1s
-    
-    case ${arch} in
-    i686)
-        t_int="${mirror}/releases/x86/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
-    ;;
-    amd64)
-        t_int="${mirror}/releases/amd64/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
-    ;;
-    esac
+    t_dig="${t_int}.DIGESTS"
     
     check="x"
     while [ "${check}" != "ok" ]
