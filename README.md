@@ -64,13 +64,13 @@ for you. Happy compiling!
 - CFLAGS="-march=native -O2 -pipe"
 - LDFLAGS="-Wl,-O1 -Wl,--as-needed -Wl,--sort-common -Wl,--hash-style=gnu"
 - Mirrors for Turkish users:
-      http://ftp.linux.org.tr/gentoo 
-      ftp://ftp.linux.org.tr/gentoo 
-      ftp://mirrors.linuxant.fr/distfiles.gentoo.org
+	http://ftp.linux.org.tr/gentoo 
+	ftp://ftp.linux.org.tr/gentoo 
+	ftp://mirrors.linuxant.fr/distfiles.gentoo.org
   Mirrors for other users:
-      ftp://mirrors.linuxant.fr/distfiles.gentoo.org
-      http://gentoo.supp.name
-      http://portage.org.ua
+	ftp://mirrors.linuxant.fr/distfiles.gentoo.org
+	http://gentoo.supp.name
+	http://portage.org.ua
 - Portage profile is "${arch}/13.0/ for basic install"
   and "${arch}/13.0/desktop for normal install"
 - Kernel has lots of drivers activated to help to get an error free first boot
@@ -116,13 +116,13 @@ for you. Happy compiling!
 11- Do a controlled "emerge -e system"
 12- Kernel compilation (genkernel) with lots of needed settings/drivers
 13- Emerge grub and create grub.conf
-    *** Steps for normal install ***
-    --- Emerge xorg-server and create xorg.conf
-    --- Emerge and configure Xfce
-    --- Emerge and configure Gdm Login Manager
-    --- Configure evdev
-    --- Emerge NetworkManager
-    --- Emerge and configure Alsa
+	*** Steps for normal install ***
+	--- Emerge xorg-server and create xorg.conf
+	--- Emerge and configure Xfce
+	--- Emerge and configure Gdm Login Manager
+	--- Configure evdev
+	--- Emerge NetworkManager
+	--- Emerge and configure Alsa
 14- Create/update configuration files (localtime, keymaps, hostname, etc)
 15- Change locale based on keymap
 16- Change root password and create user
