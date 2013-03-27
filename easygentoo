@@ -1755,6 +1755,8 @@ get_tar() {
     
     t_dig="${t_int}.DIGESTS"
     
+    a2v "tarball=\"${tarball}\""
+    
     check="x"
     while [ "${check}" != "ok" ]
     do
