@@ -195,10 +195,8 @@ mirror_check() {
     for mrr in ${mirrorlist}
     do
         # Trimming mirror name. Ex. http://gentoo.kiev.ua/ftp -->> gentoo.kiev.ua
-        [[ "$(ping -nc3 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { echo "${mrr} x86"; rm -rf ${lt}; get_files "${mrr}/releases/x86/autobuilds/${lt}"; echo "${mrr} amd64"; rm -rf ${lt}; get_files "${mrr}/releases/amd64/autobuilds/${lt}"; }
+        [[ "$(ping -nc3 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { a2v "mirror=\"${mrr}\""; break; }
     done
-    
-    echo; eg "Check it all :)"; read key; read key
     
     # Cancel setup when there are no available mirrors
     [[ "$(grep 'mirror=' ${vl})" ]] || tch stop.eg
@@ -1743,9 +1741,8 @@ get_tar() {
     
     sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
     
-    ext=".tar.bz2"
-    tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
-    tarball="stage3-${arch}-${tardate}${ext}"
+    tarball="$(grep -o stage3-${arch}-[0-9]*.tar.bz2 ${lt})"
+    tardir="$(grep ${tarball} ${lt})"
     
     a2v "tarball=\"${tarball}\""
     
@@ -1753,17 +1750,17 @@ get_tar() {
     
     case ${arch} in
     i686)
-        t_int="${mirror}/releases/x86/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
+        t_int="${mirror}/releases/x86/autobuilds/${tardir}"; t_dig="${t_int}.DIGESTS"
     ;;
     amd64)
-        t_int="${mirror}/releases/amd64/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
+        t_int="${mirror}/releases/amd64/autobuilds/${tardir}"; t_dig="${t_int}.DIGESTS"
     ;;
     esac
     
     check="x"
     while [ "${check}" != "ok" ]
     do
-        [[ -e "${tarball}.DIGESTS" ]] && rm -rf ${tarball}.DIGESTS
+        [[ -e "${tarball}.DIGESTS" ]] && rm -rf ${f}.DIGESTS
 
         get_files "${t_dig}"; grep "${tarball}" "${tarball}.DIGESTS" | sed 1q > t_dig.eg
 
