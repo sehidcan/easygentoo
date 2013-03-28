@@ -1837,7 +1837,7 @@ open_tar() {
     done
     
     read t < tball.eg
-    tar xjpf ${t} -C ${mnt} && touch tball.done
+    tar --numeric-owner -xjpf ${t} -C ${mnt} && touch tball.done
     
     until [ -e "sshot.eg" ]
     do
@@ -1845,7 +1845,7 @@ open_tar() {
     done
     
     read p < sshot.eg
-    mkdir -p ${mnt}/usr/portage && tar xjf ${p} -C ${mnt}/usr && touch sshot.done
+    mkdir -p ${mnt}/usr/portage && tar --numeric-owner -xjf ${p} -C ${mnt}/usr && touch sshot.done
 
     touch move.eg
 }
@@ -1860,7 +1860,7 @@ move() {
     [[ ! -d "${mnt}/etc/portage" ]] && mkdir -p ${mnt}/etc/portage
 
     umount -l ${mnt}/proc ${mnt}/dev &>/dev/null
-    mount -t proc none ${mnt}/proc &>/dev/null
+    mount -R /proc ${mnt}/proc &>/dev/null
     mount -R /dev ${mnt}/dev &>/dev/null
     
     cp ${eg} ${mnt} &>/dev/null
@@ -1875,7 +1875,7 @@ move() {
     
     touch ${mnt}/chroot.eg &>/dev/null
     
-    chroot ${mnt} sh ${eg}
+    chroot ${mnt} $(which env) -i TERM=$TERM sh ${eg}
 }
 
 create_swap_file() {
@@ -1965,7 +1965,7 @@ inside() {
             cf 'LINGUAS="pt_BR"'
         ;;
         trq|trf)
-            cf 'LINGUAS="tr en"'
+            cf 'LINGUAS="tr"'
         ;;
         us)
             cf 'LINGUAS="en"'
@@ -2728,13 +2728,13 @@ end() {
     
     case ${keymap} in
     br)
-        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Portugese Brazilian"; eg "..."; sleep 1s; echo
+        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Portugese Brazilian"; eg "..."; sleep 2s; echo
     ;;
     trq|trf)
-        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg "..."; sleep 1s; echo
+        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "Turkish"; eg "..."; sleep 2s; echo
     ;;
     us)
-        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "English"; eg "..."; sleep 1s; echo
+        echo; eb2 "* "; eg2 "Removing all localization files excluding "; er2 "English"; eg "..."; sleep 2s; echo
     ;;
     esac
 
@@ -2767,8 +2767,6 @@ end() {
     esac
     
     localepurge &>/dev/null
-
-    cl
     
     [[ -z "${swap_part}" ]] && { swapoff /egswap &>/dev/null; rm -rf /egswap &>/dev/null; }
     
