@@ -394,12 +394,12 @@ inst() {
                 esac
                 
                 if [ -e "sys.eg" ]; then
-                    mrg -e --oneshot --nodeps ${package} || mrg -e --oneshot ${package}
+                    mrg -e --oneshot --nodeps ${package}
                 else
                     if [ -n "$(grep ${package} ${compiled})" ]; then
-                        mrg -u --oneshot --nodeps ${package} || mrg -u --oneshot ${package}
+                        mrg -u --oneshot --nodeps ${package}
                     else
-                        mrg --oneshot --nodeps ${package} || mrg --oneshot ${package}
+                        mrg --oneshot --nodeps ${package}
                     fi
                 fi
                 
@@ -1837,7 +1837,7 @@ open_tar() {
     done
     
     read t < tball.eg
-    tar --numeric-owner -xjpf ${t} -C ${mnt} && touch tball.done
+    tar -xjpf ${t} -C ${mnt} && touch tball.done
     
     until [ -e "sshot.eg" ]
     do
@@ -1845,7 +1845,7 @@ open_tar() {
     done
     
     read p < sshot.eg
-    mkdir -p ${mnt}/usr/portage && tar --numeric-owner -xjf ${p} -C ${mnt}/usr && touch sshot.done
+    mkdir -p ${mnt}/usr/portage && tar -xjf ${p} -C ${mnt}/usr && touch sshot.done
 
     touch move.eg
 }
@@ -1860,7 +1860,7 @@ move() {
     [[ ! -d "${mnt}/etc/portage" ]] && mkdir -p ${mnt}/etc/portage
 
     umount -l ${mnt}/proc ${mnt}/dev &>/dev/null
-    mount -R /proc ${mnt}/proc &>/dev/null
+    mount -t proc none ${mnt}/proc &>/dev/null
     mount -R /dev ${mnt}/dev &>/dev/null
     
     cp ${eg} ${mnt} &>/dev/null
@@ -1875,7 +1875,7 @@ move() {
     
     touch ${mnt}/chroot.eg &>/dev/null
     
-    chroot ${mnt} $(which env) -i TERM=$TERM sh ${eg}
+    chroot ${mnt} sh ${eg}
 }
 
 create_swap_file() {
