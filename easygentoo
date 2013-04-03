@@ -179,7 +179,7 @@ on_off() {
 net_watch() {
     until [ -e "stop.eg" ]
     do
-        [[ "$(ping -nc1 www.google.com)" ]] || { [[ "$(ping -nc3 www.google.com)" ]] || connect_me &>/dev/null; }
+        [[ "$(ping -nc1 www.google.com)" ]] || { [[ "$(ping -nc3 -i2 www.google.com)" ]] || connect_me &>/dev/null; }
         sleep 60s
     done
 }
@@ -195,7 +195,7 @@ mirror_check() {
     for mrr in ${mirrorlist}
     do
         # Trimming mirror name. Ex. http://gentoo.kiev.ua/ftp -->> gentoo.kiev.ua
-        [[ "$(ping -nc3 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { a2v "mirror=\"${mrr}\""; break; }
+        [[ "$(ping -nc3 -i2 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { a2v "mirror=\"${mrr}\""; break; }
     done
     
     # Cancel setup when there are no available mirrors
@@ -213,7 +213,7 @@ connect_me() {
         which ip && { ip link set ${adapter} down ; ip link set ${adapter} up; } || { ifconfig ${adapter} down; ifconfig ${adapter} up; }
         dlt "/var/run/dhcpcd-${adapter}.pid"
         sleep 3s; dhcpcd ${adapter}; sleep 7s
-        [[ "$(ping -nc3 www.google.com)" ]] && { tch connected.eg; break; }
+        [[ "$(ping -nc3 -i2 www.google.com)" ]] && { tch connected.eg; break; }
     done
 }
 
@@ -1691,7 +1691,7 @@ prepare() {
 }
 
 get_tar() {
-    [[ "$(ping -nc1 www.google.com)" ]] && tch connected.eg || { [[ "$(ping -nc3 www.google.com)" ]] && tch connected.eg || connect_me &>/dev/null; }
+    [[ "$(ping -nc1 www.google.com)" ]] && tch connected.eg || { [[ "$(ping -nc3 -i2 www.google.com)" ]] && tch connected.eg || connect_me &>/dev/null; }
     echo; eb2 "* "; eg "Checking mirrors..."; sleep 0.5s
     
     case ${keymap} in
