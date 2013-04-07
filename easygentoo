@@ -597,6 +597,29 @@ k_kernel() {
     ;;
     esac
     
+    case ${keymap} in
+    br)
+        avoid_dup_kernel "CONFIG_FAT_DEFAULT_CODEPAGE=860"
+    ;;
+    trq|trf)
+        avoid_dup_kernel "CONFIG_FAT_DEFAULT_CODEPAGE=857"
+    ;;
+    us)
+        avoid_dup_kernel "CONFIG_FAT_DEFAULT_CODEPAGE=437"
+    ;;
+    esac
+    
+    case ${keymap} in
+    trq|trf)
+        avoid_dup_kernel "CONFIG_FAT_DEFAULT_IOCHARSET=\"iso8859-9\""
+        avoid_dup_kernel "CONFIG_NLS_DEFAULT=\"iso8859-9\""
+    ;;
+    br|us)
+        avoid_dup_kernel "CONFIG_FAT_DEFAULT_IOCHARSET=\"iso8859-1\""
+        avoid_dup_kernel "CONFIG_NLS_DEFAULT=\"iso8859-1\""
+    ;;
+    esac
+    
     [[ ! -d "/etc/kernels" ]] && mkdir -p /etc/kernels
 
     cp easygentoo.config /etc/kernels
