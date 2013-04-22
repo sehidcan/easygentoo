@@ -195,7 +195,7 @@ mirror_check() {
     for mrr in ${mirrorlist}
     do
         # Trimming mirror name. Ex. http://gentoo.kiev.ua/ftp -->> gentoo.kiev.ua
-        [[ "$(ping -nc3 -i2 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { a2v "mirror=\"${mrr}\""; break; }
+        [[ "$(ping -nc3 -i2 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { sed -i s:"^mirror=.*":"mirror=\"${mrr}\"": ${vl}; break; }
     done
     
     # Cancel setup when there are no available mirrors
@@ -210,7 +210,7 @@ connect_me() {
     
     for adapter in ${adapters_found}
     do
-        which ip && { ip link set ${adapter} down ; ip link set ${adapter} up; } || { ifconfig ${adapter} down; ifconfig ${adapter} up; }
+        which ip &>/dev/null && { ip link set ${adapter} down &>/dev/null; ip link set ${adapter} up &>/dev/null; } || { ifconfig ${adapter} down &>/dev/null; ifconfig ${adapter} up &>/dev/null; }
         dlt "/var/run/dhcpcd-${adapter}.pid"
         sleep 3s; dhcpcd ${adapter}; sleep 7s
         [[ "$(ping -nc3 -i2 www.google.com)" ]] && { tch connected.eg; break; }
@@ -1343,7 +1343,9 @@ check() {
     unset adapter
     for adapter in eth0 eth1 eth2 eth3 eth4 eth5
     do
-        ip -s link show "${adapter}" &>/dev/null && echo "${adapter}" >> adapters.eg
+        which ip &>/dev/null && { ip link set ${adapter} down &>/dev/null; ip link set ${adapter} up &>/dev/null; } || { ifconfig ${adapter} down &>/dev/null; ifconfig ${adapter} up &>/dev/null; }
+        sleep 3s
+        which ip &>/dev/null && { ip -s link show "${adapter}" &>/dev/null && echo "${adapter}" >> adapters.eg; } || { ifconfig ${adapter} &>/dev/null && echo "${adapter}" >> adapters.eg; }
     done
     
     [[ -e adapters.eg ]] && adapters_found="$(cat adapters.eg | tr '\n' ' ' | sed 's/ *$//')"
@@ -1731,54 +1733,39 @@ get_tar() {
     mirror_check
     timesync
     
-    # [[ -e "${lt}" ]] && rm -rf ${lt}
+    [[ -e "${lt}" ]] && rm -rf ${lt}
     
-    # echo; eb2 "* "; eg "Getting latest tarball name..."; sleep 1s
-    
-    # case ${arch} in
-    # i686)
-        # get_files "${mirror}/releases/x86/autobuilds/${lt}"
-    # ;;
-    # amd64)
-        # get_files "${mirror}/releases/amd64/autobuilds/${lt}"
-    # ;;
-    # esac
-    
-    # sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
-    
-    # ext=".tar.bz2"
-    # tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
-    # tarball="stage3-${arch}-${tardate}${ext}"
-    
-    # a2v "tarball=\"${tarball}\""
-    
-    # en2 "  Latest tarball:"; ey "  ${tarball}"; sleep 1s
-    
-    # case ${arch} in
-    # i686)
-        # t_int="${mirror}/releases/x86/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
-    # ;;
-    # amd64)
-        # t_int="${mirror}/releases/amd64/autobuilds/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
-    # ;;
-    # esac
-    
-    # Temporary fix for tarball download issue
+    echo; eb2 "* "; eg "Getting latest tarball name..."; sleep 1s
     
     case ${arch} in
     i686)
-        tarball="stage3-i686-20130108.tar.bz2"
-        t_int="${mirror}/releases/x86/autobuilds/20130108/default/20130108/${tarball}"
+        get_files "${mirror}/releases/x86/autobuilds/${lt}"
     ;;
     amd64)
-        tarball="stage3-amd64-20130110.tar.bz2"
-        t_int="${mirror}/releases/amd64/autobuilds/20130110/${tarball}"
+        get_files "${mirror}/releases/amd64/autobuilds/${lt}"
+    ;;
+    esac
+    
+    sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
+    
+    ext=".tar.bz2"
+    tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
+    tarball="stage3-${arch}-${tardate}${ext}"
+    
+    a2v "tarball=\"${tarball}\""
+    
+    en2 "  Latest tarball:"; ey "  ${tarball}"; sleep 1s
+    
+    case ${arch} in
+    i686)
+        t_int="${mirror}/releases/x86/autobuilds/${tardate}/default/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
+    ;;
+    amd64)
+        t_int="${mirror}/releases/amd64/autobuilds/${tardate}/default/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
     ;;
     esac
     
     t_dig="${t_int}.DIGESTS"
-    
-    a2v "tarball=\"${tarball}\""
     
     check="x"
     while [ "${check}" != "ok" ]
