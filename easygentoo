@@ -190,12 +190,12 @@ mirror_check() {
         sleep 1s
     done
     
-    [[ "$(grep 'mirror=' ${vl})" ]] && sed -i '\!^mirror=!d' ${vl}
+    [[ "$(grep '^export mirror=' ${vl})" ]] && sed -i '\!^export mirror=!d' ${vl}
     
     for mrr in ${mirrorlist}
     do
         # Trimming mirror name. Ex. http://gentoo.kiev.ua/ftp -->> gentoo.kiev.ua
-        [[ "$(ping -nc3 -i2 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { sed -i s:"^mirror=.*":"mirror=\"${mrr}\"": ${vl}; break; }
+        [[ "$(ping -nc3 -i2 $(echo ${mrr} | sed -e 's/.*\:\/\///' -e 's/\/.*$//'))" ]] && { a2v "mirror=\"${mrr}\""; break; }
     done
     
     # Cancel setup when there are no available mirrors
