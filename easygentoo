@@ -1748,9 +1748,7 @@ get_tar() {
     
     sed -i -e '\!^#!d' -e 's:^[ \t]*::' -e 's:[ \t]*$::' -e '\!^$!d' ${lt}
     
-    ext=".tar.bz2"
-    tardate="$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq)"
-    tarball="stage3-${arch}-${tardate}${ext}"
+    tarball="stage3-${arch}-$(grep ${arch} ${lt} | cut -d'/' -f1 | uniq).tar.bz2"
     
     a2v "tarball=\"${tarball}\""
     
@@ -1758,10 +1756,10 @@ get_tar() {
     
     case ${arch} in
     i686)
-        t_int="${mirror}/releases/x86/autobuilds/${tardate}/default/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
+        t_int="${mirror}/releases/x86/autobuilds/current-stage3-i686/${tarball}"; t_dig="${t_int}.DIGESTS"
     ;;
     amd64)
-        t_int="${mirror}/releases/amd64/autobuilds/${tardate}/default/${tardate}/${tarball}"; t_dig="${t_int}.DIGESTS"
+        t_int="${mirror}/releases/amd64/autobuilds/current-stage3-amd64/${tarball}"; t_dig="${t_int}.DIGESTS"
     ;;
     esac
     
