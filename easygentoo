@@ -1721,10 +1721,10 @@ get_tar() {
     
     case ${keymap} in
     trq|trf)
-        mirrorlist="http://ftp.linux.org.tr/gentoo ftp://ftp.linux.org.tr/gentoo ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
+        mirrorlist="http://ftp.linux.org.tr/gentoo ftp://ftp.linux.org.tr/gentoo http://gentoo.supp.name ftp://mirrors.linuxant.fr/distfiles.gentoo.org"
     ;;
     br|us)
-        mirrorlist="ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://gentoo.supp.name"
+        mirrorlist="http://gentoo.supp.name ftp://mirrors.linuxant.fr/distfiles.gentoo.org http://ftp.linux.org.tr/gentoo ftp://ftp.linux.org.tr/gentoo"
     ;;
     esac
     
