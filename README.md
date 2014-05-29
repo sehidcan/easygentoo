@@ -45,8 +45,8 @@ for you. Happy compiling!
 - Using a capable intallation media which has more filesystem utilities, Easy Gentoo can format, mount, configure partitions for these filesystems: "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
 - Localization is based on your "keymap". "us" is for English, "br" is for Brazilian, "trq" and "trf" are for Turkish.
 - A temporary swap file with 1 GB size is created as a precaution if root partition is bigger than 8 GB
-- There are two install types; basic:   doesn't include X,Gdm,Xfce,Alsa,NetworkManager,  normal:  includes X,Gdm,Xfce,Alsa,NetworkManager. Base system configuration is the same for both.
-- Easy Gentoo needs an ethernet connection to operate, wireless connection is not an option. Because when connection is lost, reconnection attemps are based on eth* names. (ex. dhcpcd eth0)
+- There are two install types; basic:   doesn't include X,LightDM,Xfce,Alsa,NetworkManager,  normal:  includes X,LightDM,Xfce,Alsa,NetworkManager. Base system configuration is the same for both.
+- Easy Gentoo needs an ethernet connection to operate, wireless connection is not an option for now.
 - If the host computer is a laptop, some USE flag changes and additional package merges are made (these have nothing to do with wireless)
 - Stable packages are used
 - Based on a stage3 tarball (latest one)
@@ -62,12 +62,12 @@ ftp://mirrors.linuxant.fr/distfiles.gentoo.org   http://gentoo.supp.name   http:
 
 - Portage profile is "${arch}/13.0/ for basic install" and "${arch}/13.0/desktop for normal install"
 - Kernel has lots of drivers activated to help to get an error free first boot
-- Grub legacy is used, not Grub2
+- Grub2 is used, not Grub legacy
 - No system logger and no cron included
 - A few performance and security related sysctl settings are included
 - sudo configuration and some aliases are included
 - File manager is Thunar with automount support
-- Login Manager is GDM
+- Login Manager is LightDM
 
 *** After Using Easy Gentoo, you should check/change these ***
 - Timezone
@@ -82,7 +82,7 @@ ftp://mirrors.linuxant.fr/distfiles.gentoo.org   http://gentoo.supp.name   http:
 - boot from an installation media (ex. Gentoo Minimal Install CD)
 - execute these commands:
 
-wget https://raw.github.com/shdcn/easygentoo/master/easygentoo
+wget https://raw.githubusercontent.com/shdcn/easygentoo/master/easygentoo
 
 chmod +x easygentoo
 
@@ -95,7 +95,7 @@ https://github.com/shdcn/easygentoo/blob/master/profile
 
 - start script:
 
-sh easygentoo
+./easygentoo
 
 *** Steps for basic install ***
 - Check if necessary tools/commands are available to continue
@@ -109,25 +109,25 @@ sh easygentoo
 - Create locale.gen
 - Update make.conf and create package.use
 - Do a controlled "emerge -e system"
-- Kernel compilation (genkernel) with lots of needed settings/drivers
-- Emerge grub and create grub.conf
+- Kernel compilation (genkernel-next) with lots of needed settings/drivers
+- Emerge grub2 and create grub.cfg
+- Create/update configuration files (localtime, keymaps, hostname, etc)
+- Change locale based on keymap
+- Change root password and create user
+- Update /etc/sudoers and .bashrc
+- Unmerge unnecessary packages and do "emerge -uDN world"
 
 *** Steps for normal install ***
 
 - Emerge xorg-server and create xorg.conf
 - Emerge and configure Xfce
-- Emerge and configure Gdm Login Manager
+- Emerge and configure LightDM
 - Configure evdev
 - Emerge NetworkManager
 - Emerge and configure Alsa
 
 *** End of normal install steps ***
 
-- Create/update configuration files (localtime, keymaps, hostname, etc)
-- Change locale based on keymap
-- Change root password and create user
-- Update /etc/sudoers and .bashrc
-- Unmerge unnecessary packages and do "emerge -uDN world"
 - Purge unnecessary man pages etc. (localepurge)
 - Create a small report about whole process.
 - Delete temporary files that were created by script
