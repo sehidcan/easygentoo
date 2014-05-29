@@ -52,5 +52,8 @@ username         tiny
 ## userpass      your user password - default: resu
 userpass         kv693eRx
 
+## autonet       connection handling (reconnect with found network adapters if needed) - default: yes
+autonet          no
+
 ## blimit        bandwidth limit for installation (KB/s) (will not be active after setup finishes) - default: 0
 blimit           125
