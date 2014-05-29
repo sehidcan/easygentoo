@@ -25,8 +25,7 @@ ec2() { echo -n "${cyan}${*}${normal}";} ; ew2() { echo -n "${white}${*}${normal
 cl() { clear; echo;}
 
 exist() {
-    which ${1} &>/dev/null && { ey2 "  * "; eb2 "${1}"; en " exists"; sleep 0.2s; } || { 
-    er2 "  * "; eb2 "${1}"; er " doesn't exist"; er "Some tools are missing - Please use a different install media/environment"
+    which ${1} &>/dev/null && { ey2 "  * "; eb2 "${1}"; en " exists"; sleep 0.2s; } || { er2 "  * "; eb2 "${1}"; er " doesn't exist"; er "Some tools are missing - Please use a different install media/environment"
     echo; exit 1; }
 }
 
@@ -241,8 +240,7 @@ umrg() {
     cl; eb2 "* "; eg2 "emerge "; er "--unmerge ${@}"
     for p in $@
     do
-        CONFIG_PROTECT_MASK="/etc" emerge --unmerge ${p} 2> /dev/null && { 
-        sed -i "\!.*/${p}.*!d" ${compiled}; sed -i "\!.*/${p}.*!d" pkglist.eg; }
+        CONFIG_PROTECT_MASK="/etc" emerge --unmerge ${p} 2> /dev/null && { sed -i "\!.*/${p}.*!d" ${compiled}; sed -i "\!.*/${p}.*!d" pkglist.eg; }
     done
 }
 
@@ -1263,8 +1261,7 @@ set_gcc() {
 }
 
 timesync() {
-    which ntpdate &>/dev/null && { echo; eb2 "* "; eg "ntpdate -b -u pool.ntp.org"; echo; ntpdate -b -u pool.ntp.org; } || { 
-    which sntp &>/dev/null && sntp -t10 pool.ntp.org &>/dev/null; }
+    which ntpdate &>/dev/null && { echo; eb2 "* "; eg "ntpdate -b -u pool.ntp.org"; echo; ntpdate -b -u pool.ntp.org; } || { which sntp &>/dev/null && sntp -t10 pool.ntp.org &>/dev/null; }
 }
 
 refresh() {
@@ -1313,10 +1310,7 @@ check() {
     
     [[ "$(pwd)" != "/root" ]] && { echo; er2 "Please move the script to "; ey2 "/root"; er " and start it again."; exit 1; }
     
-    # fixme
-    # [[ ! -e "${profile}" ]] && { cl; er "  Looks like you don't have a profile. Please create one."; echo; exit 1; }
-    
-    [[ ! -e "${profile}" ]] && get_files "https://raw.githubusercontent.com/shdcn/experimental/master/profile"
+    [[ ! -e "${profile}" ]] && { cl; er "  Looks like you don't have a profile. Please create one."; echo; exit 1; }
     
     [[ ! -d "${mnt}" ]] && mkdir -p ${mnt}
     
@@ -1337,8 +1331,7 @@ check() {
     
     echo "$(tr -s '[:blank:]' ' ' < ${profile})" > ${profile}
     
-    necessary="awk basename bash cat chmod chroot clear cp cut dhcpcd fdisk grep ifconfig killall loadkeys 
-    md5sum mkdir mount mv ping rm sed setterm sha512sum sleep tar touch tr umount uname uniq wget"
+    necessary="awk basename bash cat chmod chroot clear cp cut dhcpcd fdisk grep ifconfig killall loadkeys md5sum mkdir mount mv ping rm sed setterm sha512sum sleep tar touch tr umount uname uniq wget"
     nicknames="boot extra home root swap"
     
     a2v "fs_list=\"btrfs ext2 ext3 ext4 ntfs reiserfs xfs\""
@@ -1781,8 +1774,7 @@ prepare() {
 }
 
 get_tar() {
-    [[ "$(ping -nc1 www.google.com)" ]] && tch connected.eg || { 
-    [[ "$(ping -nc3 -i2 www.google.com)" ]] && tch connected.eg || connect_me &>/dev/null; }
+    [[ "$(ping -nc1 www.google.com)" ]] && tch connected.eg || { [[ "$(ping -nc3 -i2 www.google.com)" ]] && tch connected.eg || connect_me &>/dev/null; }
     
     echo; eb2 "* "; eg "Checking mirrors..."; sleep 0.5s
     
@@ -1956,13 +1948,6 @@ move() {
     touch ${mnt}/chroot.eg &>/dev/null
     
     chroot ${mnt} $(which env) -i TERM=$TERM ./${eg}
-    
-    # for m in "proc" "sys" "dev" "dev/pts"
-    # do
-        # umount -l ${mnt}/$m &>/dev/null
-    # done
-    
-    # umount -l ${mnt} &>/dev/null
 }
 
 create_swap_file() {
@@ -2035,7 +2020,7 @@ inside() {
 
     fl "/etc/portage/make.conf" "0" "d"
 
-    cf "CFLAGS=\"-march=native -Os -pipe\""
+    cf "CFLAGS=\"-march=native -O2 -pipe\""
     cf 'CXXFLAGS="${CFLAGS}"'
         case ${arch} in
         i686)
@@ -2117,7 +2102,7 @@ inside() {
 
     fl "/etc/portage/make.conf" "0" "d"
 
-    cf "CFLAGS=\"-march=native -Os -pipe\""
+    cf "CFLAGS=\"-march=native -O2 -pipe\""
     cf 'CXXFLAGS="${CFLAGS}"'
         case ${arch} in
         i686)
@@ -2660,7 +2645,11 @@ inside() {
     cf "alias pk='sudo nano /etc/portage/package.keywords'"
     cf "alias rb='sudo shutdown -r now'"
     cf "alias sd='sudo shutdown -h now'"
-    cf "alias lp='sudo leafpad'"
+        case ${setup} in
+        normal)
+            cf "alias lp='sudo leafpad'"
+        ;;
+        esac
     cf "alias em='sudo emerge'"
     cf "alias emp='sudo emerge -pv'"
     cf "alias ems='sudo emerge --quiet --sync'"
