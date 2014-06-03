@@ -86,9 +86,8 @@ wget https://raw.githubusercontent.com/shdcn/easygentoo/master/easygentoo
 
 chmod +x easygentoo
 
-chmod 755 easygentoo
-
 - create a profile in the same directory where script is placed
+
 for more information on profile please read:
 
 https://github.com/shdcn/easygentoo/blob/master/profile
