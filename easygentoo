@@ -209,9 +209,9 @@ mirror_check() {
 
 connect_me() {
     unset adapter trm pid
-    killall ping dhcpcd ifconfig ip
-    killall ping dhcpcd ifconfig ip
-    killall ping dhcpcd ifconfig ip
+    killall ping dhcpcd ifconfig ip &>/dev/null
+    killall ping dhcpcd ifconfig ip &>/dev/null
+    killall ping dhcpcd ifconfig ip &>/dev/null
     
     if [ "${autonet}" == "yes" ]; then
         for adapter in ${adapters_found}
@@ -302,7 +302,7 @@ inst() {
         case "${a}" in
         "-e system")
             emerge -pv --nodeps gentoo-sources | grep ebuild | grep gentoo-sources | tr -s '[:blank:]' ' ' | sed -e 's:\[[0-9].*\]::' -e 's:\[.*ebuild.*\] :=:' -e 's: .*::' >> ${trg_file}
-            emerge -pv --nodeps genkernel | grep ebuild | grep genkernel | tr -s '[:blank:]' ' ' | sed -e 's:\[[0-9].*\]::' -e 's:\[.*ebuild.*\] :=:' -e 's: .*::' >> ${trg_file}
+            emerge -pv --nodeps genkernel-next | grep ebuild | grep genkernel-next | tr -s '[:blank:]' ' ' | sed -e 's:\[[0-9].*\]::' -e 's:\[.*ebuild.*\] :=:' -e 's: .*::' >> ${trg_file}
         ;;
         esac
         
@@ -2112,10 +2112,11 @@ inside() {
             cf 'CHOST="x86_64-pc-linux-gnu"'
         ;;
         esac
-    cf 'LDFLAGS="-Wl,-O1 -Wl,--as-needed -Wl,--sort-common -Wl,--hash-style=gnu"'
-    cf 'ACCEPT_KEYWORDS="'${kw}'"'
-    cf 'ACCEPT_LICENSE="*"'
     cf 'MAKEOPTS="-j'${core}'"'
+    cf ''
+    cf 'ACCEPT_LICENSE="*"'
+    cf 'ACCEPT_KEYWORDS="'${kw}'"'
+    cf 'LDFLAGS="-Wl,-O1 -Wl,--as-needed -Wl,--sort-common -Wl,--hash-style=gnu"'
     cf ''
     cf '# It is recommended to leave WANT_MP disabled because of the problems it may trigger.'
     cf '# WANT_MP="true"'
@@ -2233,23 +2234,8 @@ inside() {
     esac
     
     cf 'AUTOCLEAN="yes"'
-    cf 'CONFIG_PROTECT="/etc /etc/fstab /etc/hosts /etc/locale.conf /etc/locale.gen '
-    cf '    /home/'${username}'/.dmrc /etc/localtime /etc/sudoers /etc/sysctl.conf '
-    cf '    /etc/X11/xorg.conf.d /etc/portage/package.use /etc/conf.d/domainname '
-    cf '    /etc/hostname /etc/conf.d/hwclock /etc/vconsole.conf /etc/conf.d/net '
-    cf '    /etc/modprobe.d/blacklist.conf /var/lib/AccountsService/users/'${username}' '
-    cf '    /etc/portage/env /etc/X11/gdm /usr/share/config/kdm"'
-    cf 'PORTDIR="/usr/portage"'
-    cf 'DISTDIR="${PORTDIR}/distfiles"'
-    cf 'PKGDIR="${PORTDIR}/packages"'
-    cf 'PORTDIR="/usr/portage"'
-    cf 'PORTAGE_TMPDIR="/var/tmp"'
-    cf 'PORTAGE_COMPRESS="bzip2"'
-    cf 'PORTAGE_COMPRESS_FLAGS="-9"'
-    cf 'PORTAGE_NICENESS="15"'
-    cf 'PORTAGE_RSYNC_INITIAL_TIMEOUT="10"'
-    cf 'PORTAGE_RSYNC_RETRIES="5"'
-    cf 'FEATURES="-ccache -distcc fixlafiles -news -parallel-fetch sandbox usersandbox userfetch userpriv nodoc noinfo"'
+    cf ''
+    cf 'FEATURES="-ccache -distcc fail-clean fixlafiles -news -parallel-fetch sandbox unknown-features-filter unknown-features-warn nodoc noinfo"'
     cf 'GENTOO_MIRRORS="'${mirrorlist}'"'
     cf 'RSYNC="rsync://rsync2.us.gentoo.org rsync://rsync3.us.gentoo.org rsync://rsync25.us.gentoo.org"'
         if [ "${blimit}" -gt "0" ]; then
@@ -2257,6 +2243,25 @@ inside() {
             cf 'RESUMECOMMAND="${RESUMECOMMAND} --limit-rate='${blimit}'k"'
         fi
     cf 'EMERGE_DEFAULT_OPTS="--autounmask=y --autounmask-write=y --with-bdeps=y --quiet-build"'
+    cf ''
+    cf 'CONFIG_PROTECT="/etc /etc/fstab /etc/hosts /etc/locale.conf /etc/locale.gen '
+    cf '    /home/'${username}'/.dmrc /etc/localtime /etc/sudoers /etc/sysctl.conf '
+    cf '    /etc/X11/xorg.conf.d /etc/portage/package.use /etc/conf.d/domainname '
+    cf '    /etc/hostname /etc/conf.d/hwclock /etc/vconsole.conf /etc/conf.d/net '
+    cf '    /etc/modprobe.d/blacklist.conf /var/lib/AccountsService/users/'${username}' '
+    cf '    /etc/portage/env /etc/X11/gdm /usr/share/config/kdm"'
+    cf ''
+    cf 'PORTDIR="/usr/portage"'
+    cf 'DISTDIR="${PORTDIR}/distfiles"'
+    cf 'PKGDIR="${PORTDIR}/packages"'
+    cf 'PORTAGE_TMPDIR="/var/tmp"'
+    cf 'PORTAGE_COMPRESS="bzip2"'
+    cf 'PORTAGE_COMPRESS_FLAGS="-9"'
+    cf 'PORTAGE_NICENESS="15"'
+    cf 'PORTAGE_RSYNC_INITIAL_TIMEOUT="10"'
+    cf 'PORTAGE_RSYNC_RETRIES="5"'
+    cf ''
+    cf 'PYTHON_TARGETS="python2_7 python3_3"'
         case ${setup} in
         normal)
             case ${type} in
@@ -2269,7 +2274,6 @@ inside() {
             esac
         ;;
         esac
-    cf 'PYTHON_TARGETS="python2_7 python3_3"'
     cf 'GRUB_PLATFORMS="pc"'
     cf ''
 
