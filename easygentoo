@@ -1333,13 +1333,13 @@ get_tarball() {
 
     re='^#'
     while read lt_line; do
-        if [[ ! "${lt_line}" =~ $re ]]; then
-            date="${lt_line:0:8}"
-            if [ "${date}/stage3-${arch}-${date}.tar.bz2" = "${lt_line}" ]; then
-                tarball="stage3-${arch}-${date}.tar.bz2"
-                break
-            fi
+      if [[ ! "${lt_line}" =~ $re ]]; then
+        date="${lt_line:0:8}"
+        if [ "${date}/stage3-${arch}-${date}.tar.bz2" = "${lt_line}" ]; then
+          tarball="stage3-${arch}-${date}.tar.bz2"
+          break
         fi
+      fi
     done < <(awk '{print $1}' "${lt}")
 
     a2v "tarball=\"${tarball}\""
