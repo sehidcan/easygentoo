@@ -1331,13 +1331,16 @@ get_tarball() {
     [[ -e "${lt}" ]] && rm -rf ${lt}
     download "latest"
 
-    while read lt_line
-    do
-        if [ "${lt_line}" != "^#*" ]; then
+    re='^#'
+    while read lt_line; do
+        if [[ ! "${lt_line}" =~ $re ]]; then
             date="${lt_line:0:8}"
-            [[ "${lt_line}" == "${date}/stage3-${arch}-${date}.tar.bz2" ]] && tarball="stage3-${arch}-${date}.tar.bz2" && break
+            if [ "${date}/stage3-${arch}-${date}.tar.bz2" = "${lt_line}" ]; then
+                tarball="stage3-${arch}-${date}.tar.bz2"
+                break
+            fi
         fi
-    done < "${lt}"
+    done < <(awk '{print $1}' "${lt}")
 
     a2v "tarball=\"${tarball}\""
 
