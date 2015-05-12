@@ -34,17 +34,16 @@ exist() {
 }
 
 find_flags() {
-    cpu_inst="$(grep flags /proc/cpuinfo | uniq | tr -s '[:blank:]' ' ' | cut -d':' -f2)"
+    cpu_inst="$(awk '/^flags/ {$1=$2=""; print substr($0,3); exit }' /proc/cpuinfo)"
     flags_list="3dnow 3dnowext mmx mmxext sse sse2 sse3 sse4 sse4a sse4_1 sse4_2 sse5 ssse3"
 
-    for v in ${flags_list}
-    do
-        echo "${cpu_inst}" | grep -o -w "${v}" >> flags.eg
+    for flag in ${flags_list}; do
+      echo "${cpu_inst}" | grep -o -w "${flag}" >> flags.eg
     done
 
     echo "${cpu_inst}" | grep -o -w "pni" &>/dev/null && echo "sse3" >> flags.eg
 
-    a2v "available_cpu_flags=\"$(tr '\n' ' ' < flags.eg | sed -e 's:^[ \t]*::' -e 's:[ \t]*$::')\""
+    a2v "Available_cpu_flags=\"$(tr '\n' ' ' < flags.eg | sed -E 's/[[:space:]]$//')\""
 }
 
 fl() {
