@@ -310,7 +310,7 @@ watch_swap_file() {
     while true
     do
         [[ -e "abortmission.eg" ]] && break
-        read name type size used priority <<< "$(swapon -s | grep /dev/[s:h]d[a-z][0-9]*)"
+        read name type size used priority <<< "$(swapon -s | grep /dev/[s:h:v]d[a-z][0-9]*)"
         (( used > msu )) && { sed -i '\!^export msu=!d' ${vl}; a2v "msu=\"${used}\""; }
         sleep 5s
     done
@@ -790,7 +790,7 @@ prepare() {
     while read name part label fs mp
     do
         case ${part} in
-        [s:h]d[a-z][0-9] | [s:h]d[a-z][0-9][0-9] | [s:h]d[a-z][0-9][0-9][0-9])
+        [s:h:v]d[a-z][0-9] | [s:h:v]d[a-z][0-9][0-9] | [s:h:v]d[a-z][0-9][0-9][0-9])
             case ${name} in
             root|boot|home|swap)
                 case ${name} in
@@ -808,7 +808,7 @@ prepare() {
                 ;;
                 esac
 
-                read null size <<< "`lsblk -b -o KNAME,SIZE /dev/${part} | grep [s:h]d[a-z][0-9]`"
+                read null size <<< "`lsblk -b -o KNAME,SIZE /dev/${part} | grep [s:h:v]d[a-z][0-9]`"
                 a2v "${name}_part=\"${part}\"  ${name}_label=\"${label}\"  ${name}_fs=\"${fs}\"  ${name}_mp=\"${mp}\"  ${name}_size=\"${size}\""
             ;;
             extra)
@@ -1029,7 +1029,7 @@ prepare() {
             ;;
             grub)
                 case ${value} in
-                [s:h]d[a-z] | [s:h]d[a-z][1-9] | [s:h]d[a-z][1-9][0-9] | [s:h]d[a-z][1-9][0-9][0-9])
+                [s:h:v]d[a-z] | [s:h:v]d[a-z][1-9] | [s:h:v]d[a-z][1-9][0-9] | [s:h:v]d[a-z][1-9][0-9][0-9])
                     e="x"
                 ;;
                 *)
@@ -2117,7 +2117,7 @@ e_grub() {
     none)
         e="x"
     ;;
-    [s:h]d[a-z] | [s:h]d[a-z][1-9] | [s:h]d[a-z][1-9][0-9] | [s:h]d[a-z][1-9][0-9][0-9])
+    [s:h:v]d[a-z] | [s:h:v]d[a-z][1-9] | [s:h:v]d[a-z][1-9][0-9] | [s:h:v]d[a-z][1-9][0-9][0-9])
         step=$(eb2 "* "; eg2 "Emerging "; er2 "grub"; eg "...")
         inst "-u grub"
 
