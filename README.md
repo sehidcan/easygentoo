@@ -1,14 +1,13 @@
-Easy Gentoo
-===========
+# Easy Gentoo
 
 Easy Gentoo is free software distributed under the terms of the MIT license.
 For license details, see LICENSE.
 
 ---------------------------------------------------------------------
-WARNING:
-THERE MAYBE SOME MISTAKES OR PARTS THAT NEED IMPROVING.
-I RECOMMEND YOU TO TEST THIS SCRIPT IN A VIRTUAL ENVIRONMENT FIRST.
-DON'T FORGET TO CROSS FINGERS WHILE USING ON A REAL MACHINE :)
+**WARNING:**
+**THERE MAYBE SOME MISTAKES OR PARTS THAT NEED IMPROVING.**
+**I RECOMMEND YOU TO TEST THIS SCRIPT IN A VIRTUAL ENVIRONMENT FIRST.**
+**DON'T FORGET TO CROSS FINGERS WHILE USING ON A REAL MACHINE :)**
 ---------------------------------------------------------------------
 
 Bash script for easy Gentoo Linux installation
@@ -29,7 +28,7 @@ a ready to use Xfce desktop with a few key strokes.
 Many successful installations were made. Hope it becomes a time-saver
 for you. Happy compiling!
 
-*** IMPORTANT NOTES ***
+## Important Notes
 - Easy Gentoo doesn't do partitioning, you need to do that by yourself. It formats and mounts your selection of existing partitions.
 - Using a capable intallation media which has more filesystem utilities, Easy Gentoo can format, mount, configure partitions for these filesystems: "btrfs, ext2, ext3, ext4, ntfs, reiserfs, xfs"
 - Localization is based on your "keymap". "us" is for English, "br" is for Brazilian, "trq" and "trf" are for Turkish.
@@ -58,7 +57,7 @@ ftp://mirrors.linuxant.fr/distfiles.gentoo.org   http://gentoo.supp.name   http:
 - File manager is Thunar with automount support
 - Login Manager is LightDM
 
-*** After Using Easy Gentoo, you should check/change these ***
+## After Using Easy Gentoo, you should check/change these
 - Timezone
 - Grub config (parameters, title)
 - Startup services
@@ -67,7 +66,7 @@ ftp://mirrors.linuxant.fr/distfiles.gentoo.org   http://gentoo.supp.name   http:
 - Kernel config (it is recommended to compile a new kernel with a customized config)
 - Compile list (to check if your 'must have' ones are installed)
 
-*** How to use ***
+## How to use
 - boot from an installation media (ex. Gentoo Minimal Install CD)
 - execute these commands:
 
@@ -85,7 +84,7 @@ https://github.com/shdcn/easygentoo/blob/master/profile
 
 ./easygentoo
 
-*** Steps for basic install ***
+## Steps for basic install
 - Check if necessary tools/commands are available to continue
 - Format partitions
 - Mount partitions
@@ -105,7 +104,7 @@ https://github.com/shdcn/easygentoo/blob/master/profile
 - Update /etc/sudoers and .bashrc
 - Unmerge unnecessary packages and do "emerge -uDN world"
 
-*** Steps for normal install ***
+## Steps for normal install
 
 - Emerge xorg-server and create xorg.conf
 - Emerge and configure Xfce
@@ -114,7 +113,7 @@ https://github.com/shdcn/easygentoo/blob/master/profile
 - Emerge NetworkManager
 - Emerge and configure Alsa
 
-*** End of normal install steps ***
+## End of normal install steps
 
 - Purge unnecessary man pages etc. (localepurge)
 - Create a small report about whole process.
